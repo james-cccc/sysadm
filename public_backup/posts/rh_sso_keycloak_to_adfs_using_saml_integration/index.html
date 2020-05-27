@@ -1,0 +1,2687 @@
+<!DOCTYPE html>
+<html><head>
+<title>RH-SSO (Keycloak) to ADFS Integration using SAML</title>
+
+<meta charset="utf-8">
+<meta name="X-UA-Compatible" content="IE=edge">
+<meta name="google-site-verification" content="">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+<meta content="telephone=no" name="format-detection">
+<meta name="description" content="Learn how to implement a basic authentication combination configuration in your organization by identity brokering ADFS authentication with Red Hat Single Sign On (Keycloak) using SAML">
+<meta name="renderer" content="webkit">
+<meta name="theme-color" content="#ffffff">
+
+
+
+
+<script src="/vendor/js/jquery.min.js" ></script>
+<script src="/vendor/js/popper.min.js" ></script>
+<script src="/vendor/js/bootstrap.min.js" ></script>
+<script src="/vendor/js/smooth-scroll.polyfills.min.js" ></script>
+<link type="text/css" rel="stylesheet" href="/vendor/css/bootstrap.min.css">
+<script src="/vendor/js/vue.min.js" ></script>
+
+
+
+
+<link rel="stylesheet" href="https://sysadm.life/scss/journal.min.f6026ac322c891849f28d3fd5989892057f452372a41fca6d570d4b21b55d9cd.css" integrity="sha256-9gJqwyLIkYSfKNP9WYmJIFf0UjcqQfym1XDUshtV2c0=" media="screen">
+
+
+
+<link rel="stylesheet" href="https://sysadm.life/scss/dark-mode.min.d9bd7005587bd22e0250e682a90537c68d9c186f0bcc0100d02179c37a4fa638.css" integrity="sha256-2b1wBVh70i4CUOaCqQU3xo2cGG8LzAEA0CF5w3pPpjg=" media="screen">
+
+
+<script src="https://sysadm.life/js/loadCSS.js"></script>
+<script>
+  loadCSS("https://fonts.googleapis.com/css?family=Lora|Montserrat|Fira+Mono|Noto+Serif+SC|Material+Icons");
+</script>
+
+<script src="https://sysadm.life/js/table.js"></script>
+
+
+
+
+<script src="https://sysadm.life/js/toc.js"></script>
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script src="/vendor/js/md5.min.js"></script>
+<script>
+  var gitalk = new Gitalk({
+  clientID: 'your client id',
+  clientSecret: 'your client secret',
+  repo: 'repo name',
+  owner: 'user',
+  admin: ['user'],
+  id: md5(location.pathname),
+  distractionFreeMode: 'false'
+  });
+  window.onload = function () {
+        gitalk.render('gitalk-container')
+  }
+</script>
+
+
+
+
+
+
+</head><body>
+    	<div id="app"><div ref="sideContainer" class="side-container">
+    
+    <a class="a-block nav-head false" href="https://sysadm.life">
+    
+        <div class="nav-title">
+            sysadm.life
+        </div>
+        
+        <div class="nav-subtitle">
+            The escapades of a cloud infrastructure consultant
+        </div>
+        
+    </a>
+
+    <div class="nav-link-list">
+        
+        
+            
+            
+            
+                
+            
+            
+            
+            <a class="a-block nav-link-item active" href="/posts">
+                Archive
+            </a>
+            
+        
+            
+            
+            
+            
+            
+            <a class="a-block nav-link-item false" href="/tags">
+                Tags
+            </a>
+            
+        
+    </div>
+
+    
+
+    <div class="nav-footer">
+        
+Hugo Theme <a href="https://github.com/amazingrise/hugo-theme-diary">Diary</a> by <a href="https://amazingrise.net">Rise</a>
+<br>
+Ported from <a href="https://mak1t0.cc/" target="_blank" rel="noreferrer noopener">Makito</a>'s <a href="https://github.com/SumiMakito/hexo-theme-journal/" target="_blank" rel="noreferrer noopener">Journal.</a> <br>
+<br>
+
+
+    </div>
+    
+</div><div ref="extraContainer" class="extra-container">
+    
+    
+    <div class="toc animated-visibility" :class="{ invisible: scrollY <= 140 }">
+
+
+	<div class="toc-content">
+	
+		
+		
+		
+		<center>- CATALOG -</center>
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#overview" v-on:click="closeDrawer" id="overview-nav">
+										 Overview
+									</a>
+								</li>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#active-directory-as-an-identity-provider" v-on:click="closeDrawer" id="active-directory-as-an-identity-provider-nav">
+										 Active Directory as an Identity Provider
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#integration" v-on:click="closeDrawer" id="integration-nav">
+										 Integration
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#topology" v-on:click="closeDrawer" id="topology-nav">
+										 Topology
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#infrastructure-architecture" v-on:click="closeDrawer" id="infrastructure-architecture-nav">
+										 Infrastructure Architecture
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#approach" v-on:click="closeDrawer" id="approach-nav">
+										 Approach
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#installation-media" v-on:click="closeDrawer" id="installation-media-nav">
+										 Installation Media
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#step-1-configure-the-windows-domain-controller-dc" v-on:click="closeDrawer" id="step-1-configure-the-windows-domain-controller-dc-nav">
+										 Step 1: Configure the Windows Domain Controller (DC)
+									</a>
+								</li>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#install-active-directory-domain-services-ad-ds" v-on:click="closeDrawer" id="install-active-directory-domain-services-ad-ds-nav">
+										 Install Active Directory Domain Services (AD DS)
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#validate-configuration" v-on:click="closeDrawer" id="validate-configuration-nav">
+										 Validate Configuration
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#configure-users-and-groups" v-on:click="closeDrawer" id="configure-users-and-groups-nav">
+										 Configure Users and Groups
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#create-directories" v-on:click="closeDrawer" id="create-directories-nav">
+										 Create Directories
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#create-users" v-on:click="closeDrawer" id="create-users-nav">
+										 Create Users
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#add-users-to-security-groups" v-on:click="closeDrawer" id="add-users-to-security-groups-nav">
+										 Add Users to Security Groups
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#validate" v-on:click="closeDrawer" id="validate-nav">
+										 Validate
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#create-a-gmsa-account" v-on:click="closeDrawer" id="create-a-gmsa-account-nav">
+										 Create a GMSA account
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#step-2-configure-the-federation-server-adfs" v-on:click="closeDrawer" id="step-2-configure-the-federation-server-adfs-nav">
+										 Step 2: Configure the Federation Server (ADFS)
+									</a>
+								</li>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#install-adfs" v-on:click="closeDrawer" id="install-adfs-nav">
+										 Install ADFS
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#configure-adfs" v-on:click="closeDrawer" id="configure-adfs-nav">
+										 Configure ADFS
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#configure-device-registration-service" v-on:click="closeDrawer" id="configure-device-registration-service-nav">
+										 Configure Device Registration Service
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#dns" v-on:click="closeDrawer" id="dns-nav">
+										 DNS
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#step-3-configure-the-web-server-iis" v-on:click="closeDrawer" id="step-3-configure-the-web-server-iis-nav">
+										 Step 3: Configure the Web Server (IIS)
+									</a>
+								</li>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#validate-adfs" v-on:click="closeDrawer" id="validate-adfs-nav">
+										 Validate ADFS
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#step-4-rh-sso-installation" v-on:click="closeDrawer" id="step-4-rh-sso-installation-nav">
+										 Step 4: RH-SSO Installation
+									</a>
+								</li>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#redhat-sso-installation" v-on:click="closeDrawer" id="redhat-sso-installation-nav">
+										 RedHat SSO installation
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#ssl-setup" v-on:click="closeDrawer" id="ssl-setup-nav">
+										 SSL setup
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#ssl---outgoing-http-requests" v-on:click="closeDrawer" id="ssl---outgoing-http-requests-nav">
+										 SSL - Outgoing HTTP Requests
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#enabling-sslhttps-for-the-keycloak-server-inbound" v-on:click="closeDrawer" id="enabling-sslhttps-for-the-keycloak-server-inbound-nav">
+										 Enabling SSL/HTTPS for the Keycloak Server (Inbound)
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#step-5-sso---adfs-integration" v-on:click="closeDrawer" id="step-5-sso---adfs-integration-nav">
+										 Step 5: SSO - ADFS integration
+									</a>
+								</li>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#step-6-adfs---sso-integration" v-on:click="closeDrawer" id="step-6-adfs---sso-integration-nav">
+										 Step 6: ADFS - SSO integration
+									</a>
+								</li>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#adding-relying-party-trusts" v-on:click="closeDrawer" id="adding-relying-party-trusts-nav">
+										 Adding Relying Party Trusts
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#example-of-adding-rules-via-gui-optional" v-on:click="closeDrawer" id="example-of-adding-rules-via-gui-optional-nav">
+										 Example of adding rules via GUI (optional)
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#rule-for-mapping-user-id-gui" v-on:click="closeDrawer" id="rule-for-mapping-user-id-gui-nav">
+										 Rule for Mapping user ID (GUI)
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#rule-for-mapping-the-attributes-of-the-standard-user-gui" v-on:click="closeDrawer" id="rule-for-mapping-the-attributes-of-the-standard-user-gui-nav">
+										 Rule for Mapping the Attributes of the Standard User (GUI)
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#step-7-testing-and-validation" v-on:click="closeDrawer" id="step-7-testing-and-validation-nav">
+										 Step 7: Testing and Validation
+									</a>
+								</li>
+						
+							</ul>
+						
+					
+				
+			
+	</div>
+
+</div>
+    
+    <div class="pagination">
+        <a id="globalBackToTop" class="pagination-action animated-visibility" href="#top" :class="{ invisible: scrollY == 0 }">
+            <i class="material-icons pagination-action-icon">
+                keyboard_arrow_up
+            </i>
+        </a>
+        
+        <a class="pagination-action" v-on:click="toggleDarkMode">
+            <i class="material-icons pagination-action-icon" v-if="isDarkMode">
+                brightness_4
+            </i>
+            <i class="material-icons pagination-action-icon" v-else="isDarkMode">
+                brightness_7
+            </i>
+        </a>
+        
+        
+    </div>
+</div><div class="single-column-drawer-container" ref="drawer"
+     v-bind:class="{ 'single-column-drawer-container-active': isDrawerOpen }">
+    <div class="drawer-content">
+        <div class="drawer-menu">
+            
+            
+            
+                
+                
+                
+                    
+                
+                
+                
+                <a class="a-block drawer-menu-item active" href="/posts">
+                    Archive
+                </a>
+                
+            
+                
+                
+                
+                
+                
+                <a class="a-block drawer-menu-item false" href="/tags">
+                    Tags
+                </a>
+                
+            
+            
+            <div class="toc">
+
+
+	<div class="toc-content">
+	
+		
+		
+		
+		<center>- CATALOG -</center>
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#overview" v-on:click="closeDrawer" id="overview-nav">
+										 Overview
+									</a>
+								</li>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#active-directory-as-an-identity-provider" v-on:click="closeDrawer" id="active-directory-as-an-identity-provider-nav">
+										 Active Directory as an Identity Provider
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#integration" v-on:click="closeDrawer" id="integration-nav">
+										 Integration
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#topology" v-on:click="closeDrawer" id="topology-nav">
+										 Topology
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#infrastructure-architecture" v-on:click="closeDrawer" id="infrastructure-architecture-nav">
+										 Infrastructure Architecture
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#approach" v-on:click="closeDrawer" id="approach-nav">
+										 Approach
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#installation-media" v-on:click="closeDrawer" id="installation-media-nav">
+										 Installation Media
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#step-1-configure-the-windows-domain-controller-dc" v-on:click="closeDrawer" id="step-1-configure-the-windows-domain-controller-dc-nav">
+										 Step 1: Configure the Windows Domain Controller (DC)
+									</a>
+								</li>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#install-active-directory-domain-services-ad-ds" v-on:click="closeDrawer" id="install-active-directory-domain-services-ad-ds-nav">
+										 Install Active Directory Domain Services (AD DS)
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#validate-configuration" v-on:click="closeDrawer" id="validate-configuration-nav">
+										 Validate Configuration
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#configure-users-and-groups" v-on:click="closeDrawer" id="configure-users-and-groups-nav">
+										 Configure Users and Groups
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#create-directories" v-on:click="closeDrawer" id="create-directories-nav">
+										 Create Directories
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#create-users" v-on:click="closeDrawer" id="create-users-nav">
+										 Create Users
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#add-users-to-security-groups" v-on:click="closeDrawer" id="add-users-to-security-groups-nav">
+										 Add Users to Security Groups
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#validate" v-on:click="closeDrawer" id="validate-nav">
+										 Validate
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#create-a-gmsa-account" v-on:click="closeDrawer" id="create-a-gmsa-account-nav">
+										 Create a GMSA account
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#step-2-configure-the-federation-server-adfs" v-on:click="closeDrawer" id="step-2-configure-the-federation-server-adfs-nav">
+										 Step 2: Configure the Federation Server (ADFS)
+									</a>
+								</li>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#install-adfs" v-on:click="closeDrawer" id="install-adfs-nav">
+										 Install ADFS
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#configure-adfs" v-on:click="closeDrawer" id="configure-adfs-nav">
+										 Configure ADFS
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#configure-device-registration-service" v-on:click="closeDrawer" id="configure-device-registration-service-nav">
+										 Configure Device Registration Service
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#dns" v-on:click="closeDrawer" id="dns-nav">
+										 DNS
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#step-3-configure-the-web-server-iis" v-on:click="closeDrawer" id="step-3-configure-the-web-server-iis-nav">
+										 Step 3: Configure the Web Server (IIS)
+									</a>
+								</li>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#validate-adfs" v-on:click="closeDrawer" id="validate-adfs-nav">
+										 Validate ADFS
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#step-4-rh-sso-installation" v-on:click="closeDrawer" id="step-4-rh-sso-installation-nav">
+										 Step 4: RH-SSO Installation
+									</a>
+								</li>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#redhat-sso-installation" v-on:click="closeDrawer" id="redhat-sso-installation-nav">
+										 RedHat SSO installation
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#ssl-setup" v-on:click="closeDrawer" id="ssl-setup-nav">
+										 SSL setup
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#ssl---outgoing-http-requests" v-on:click="closeDrawer" id="ssl---outgoing-http-requests-nav">
+										 SSL - Outgoing HTTP Requests
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#enabling-sslhttps-for-the-keycloak-server-inbound" v-on:click="closeDrawer" id="enabling-sslhttps-for-the-keycloak-server-inbound-nav">
+										 Enabling SSL/HTTPS for the Keycloak Server (Inbound)
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#step-5-sso---adfs-integration" v-on:click="closeDrawer" id="step-5-sso---adfs-integration-nav">
+										 Step 5: SSO - ADFS integration
+									</a>
+								</li>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#step-6-adfs---sso-integration" v-on:click="closeDrawer" id="step-6-adfs---sso-integration-nav">
+										 Step 6: ADFS - SSO integration
+									</a>
+								</li>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#adding-relying-party-trusts" v-on:click="closeDrawer" id="adding-relying-party-trusts-nav">
+										 Adding Relying Party Trusts
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#example-of-adding-rules-via-gui-optional" v-on:click="closeDrawer" id="example-of-adding-rules-via-gui-optional-nav">
+										 Example of adding rules via GUI (optional)
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#rule-for-mapping-user-id-gui" v-on:click="closeDrawer" id="rule-for-mapping-user-id-gui-nav">
+										 Rule for Mapping user ID (GUI)
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+							<ul>
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#rule-for-mapping-the-attributes-of-the-standard-user-gui" v-on:click="closeDrawer" id="rule-for-mapping-the-attributes-of-the-standard-user-gui-nav">
+										 Rule for Mapping the Attributes of the Standard User (GUI)
+									</a>
+								</li>
+						
+							</ul>
+						
+							</ul>
+						
+							</ul>
+						
+					
+				
+			
+				
+				
+					
+						
+						
+							<ul>
+						
+						
+								<li>
+				 					<a href="#step-7-testing-and-validation" v-on:click="closeDrawer" id="step-7-testing-and-validation-nav">
+										 Step 7: Testing and Validation
+									</a>
+								</li>
+						
+							</ul>
+						
+					
+				
+			
+	</div>
+
+</div>
+            
+        </div>
+    </div>
+</div>
+<transition name="fade">
+    <div v-bind:class="{ 'single-column-drawer-mask': mounted }" v-if="isDrawerOpen" v-on:click="toggleDrawer"></div>
+</transition>
+<nav ref="navBar" class="navbar sticky-top navbar-light single-column-nav-container">
+    <div ref="navBackground" class="nav-background"></div>
+    <div class="container container-narrow nav-content">
+        <button id="nav_dropdown_btn" class="nav-dropdown-toggle" type="button" v-on:click="toggleDrawer">
+            <i class="material-icons">
+                menu
+            </i>
+        </button>
+        <a ref="navTitle" class="navbar-brand" href="https://sysadm.life">
+            sysadm.life
+        </a>
+        
+        <button type="button" class="nav-darkmode-toggle" v-on:click="toggleDarkMode">
+            <i class="material-icons" v-if="isDarkMode">
+                brightness_4
+            </i>
+            <i class="material-icons" v-else="isDarkMode">
+                brightness_7
+            </i>
+        </button>
+        
+    </div>
+</nav>
+<div class="single-column-header-container" ref="pageHead"
+     v-bind:style="{ transform: 'translateZ(0px) translateY('+.3*scrollY+'px)', opacity: 1-navOpacity }">
+    <a href="https://sysadm.life">
+        <div class="single-column-header-title">sysadm.life</div>
+        
+        <div class="single-column-header-subtitle">The escapades of a cloud infrastructure consultant</div>
+        
+
+    </a>
+</div>
+            <div id="content">
+<div ref="streamContainer" class="stream-container">
+    <div class="post-list-container post-list-container-shadow">
+        <div class="post">
+            
+            
+            
+
+            <div class="post-head-wrapper-text-only"
+                
+            >
+                <div class="post-title">
+                    RH-SSO (Keycloak) to ADFS Integration using SAML
+                    
+                    <div class="post-subtitle">
+                        Learn how to implement a basic authentication combination configuration in your organization by identity brokering ADFS authentication with Red Hat Single Sign On (Keycloak) using SAML
+                    </div>
+                    
+                    <div class="post-meta">
+                        
+                        <time itemprop="datePublished">
+                            Sat, 11 Apr 2020
+                        </time>
+                        
+
+                        
+
+                        
+                            <i class="material-icons" style="">label</i>
+                            
+                                <a href="/tags/adfs">ADFS</a>
+                                &nbsp;
+                            
+                                <a href="/tags/saml">SAML</a>
+                                &nbsp;
+                            
+                        
+                        
+                            <i class="material-icons" style="">schedule</i>
+                            
+
+                            
+                            
+
+                            
+                            15 min
+                            
+                            16 s.
+                        
+                    </div>
+                </div>
+            </div>
+
+            <div class="post-body-wrapper">
+                <div class="post-body">
+                    <p>This article aims to present the steps required to create the minimum necessary infrastructure, to gain familiarity with, and test Red Hat Single Sign-On (SSO) and its integration with Microsoft Active Federation Services (ADFS) via the SAML protocol.</p>
+<p>Most businesses usually have a large Windows estate and therefore use Active Directory (AD) as it provides a single source of user management in the organisation.  Many organizations often incorporate additional authentication programs and protocols in tandem with AD, including RH-SSO for example.</p>
+<p>This is not a reference architecture, nor does it illustrate the best-practices for the technologies shown. To achieve a more production style implementation, this article showcases a high-level combination of the official Microsoft ADFS documentation and the RedHat SSO documentation.</p>
+<p>The goal of this article is to simply illustrate the bare minimum configurations required to become familiar with the capabilities of the products, an example of an integration method, and how that integration can be validated and tested. At the end of the article, the following will have configured:</p>
+<ul>
+<li>Windows Server 2016 server with the following roles: DC, ADFS, IIS</li>
+<li>Red Hat Enterprise Linux server running RedHat Single Sign-On</li>
+<li>Trust between SSO and ADFS</li>
+<li>User authentication against AD via SSO</li>
+</ul>
+<h1 id="overview">Overview</h1>
+<h3 id="active-directory-as-an-identity-provider">Active Directory as an Identity Provider</h3>
+<p>ADFS is the web module that provides endpoints to allow the use of security tokens - either OpenID Connect (OIDC) or SAML Assertions with an Active Directory Server.ADFS is typically encountered as being the bolt-on webserver to AD on-premise, in which case it is likely to be fairly old. More commonly these days, the Azure version of ADFS is used, which is more opinionated and consequently, perhaps easier to work with.</p>
+<p>Since every AD system administrator will have a differing view on how they should structure their AD database, it is not practical to provide one-size-fits-all guidance. However, this article will at least give you, the reader, some pointers around the basic steps on how to go about setting up integrations with ADFS.</p>
+<h3 id="integration">Integration</h3>
+<p>The Unified Modeling Language (UML) diagram below shows at a high level what the authentication steps are for this article using ADFS as an authentication provider for RedHat SSO using the SAML protocol. To be clear, this is just one example of Identity Brokering; SAML is highly flexible, as is RH-SSO.</p>
+<p><img src="/images/ADFS_SSO_SAML.png#center" alt="ADFS SSO Integration"></p>
+<p>Flow Description:</p>
+<ol>
+<li>The user clicks on the SAML button on the RH-SSO form.</li>
+<li>This sends a redirect to the browser along with a SAML request for Auth.</li>
+<li>The browser sends an HTTP GET to the ADFS server passing the parameters for the Auth.</li>
+<li>ADFS returns a login form requesting the user to login.</li>
+<li>The user completes the login form and then submits this form, which in-turn HTTP POSTs the credentials back to the ADFS server.</li>
+<li>ADFS checks the credentials and, when legitimate, posts a SAML response with the mapped claims to the RH-SSO server. (BTW - the endpoint POSTed to was configured originally as a part of the setup, this came from the metadata exported from RH-SSO.)</li>
+<li>On receipt of the SAML Response, RH-SSO provides the user with the option to update their details. On submission, the credentials are added to RH-SSO’s user database.</li>
+<li>END.</li>
+</ol>
+<h3 id="topology">Topology</h3>
+<p>The below diagram is a simple architectural example in terms of how ADFS and SSO can be configured and integrated. The diagram illustrates the basic topology at a high-level for how the services are aware of each other; which is basically through the act of exchanging metadata files.</p>
+<p><img src="/images/ADFS_SSO.png#center" alt="ADFS SSO Topology"></p>
+<ul>
+<li><strong>FederationMetadata.xml</strong> - This file contains information about your federation service that is used to create trusts, identify token-signing certificates, and many other things. So it needs to be publicly available so that other parties can access and consume it. This file is generated first.</li>
+<li><strong>IdentityProviderMetadata.xml</strong>  - This file is the metadata produced and downloaded from RedHat SSO which contains the SAML service provider entity descriptor which you can use to import into ADFS. This file is generated second.</li>
+</ul>
+<h3 id="infrastructure-architecture">Infrastructure Architecture</h3>
+<p>To minimise the infrastructure footprint of ADFS for the build, I’ve opted to provision a Windows Server 2016 VM, acting as the full Windows estate and a RHEL 8 VM, which will run SSO. In a more realistic scenario, the Domain Controller (DC), Federation server ADFS, and Web Server (IIS) services would be split and made highly available. However, as mentioned this article only illustrates how to quickly build a lab environment and show the integration between the two products.</p>
+<table>
+<thead>
+<tr>
+<th>Purpose</th>
+<th>Role</th>
+<th>Host</th>
+<th>OS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Domain Controller</td>
+<td>DC, DNS</td>
+<td>ad01</td>
+<td>Win Server 2016</td>
+</tr>
+<tr>
+<td>Federation server</td>
+<td>ADFS</td>
+<td>ad01</td>
+<td>Win Server 2016</td>
+</tr>
+<tr>
+<td>WebServer</td>
+<td>IIS</td>
+<td>ad01</td>
+<td>Win Server 2016</td>
+</tr>
+<tr>
+<td>RH-SSO</td>
+<td>JBOSS</td>
+<td>sso01</td>
+<td>RHEL8</td>
+</tr>
+</tbody>
+</table>
+<h3 id="approach">Approach</h3>
+<p>All setup steps in this document use CLI commands as much as is possible, Powershell in the case of Windows hosts, or Bash for Linux hosts. Tasks are presented in this fashion so the reader can understand the manual steps involved in the process. In the real world, automation should be used to reduce deployment and configuration time and increase consistency, repeatability, and reliability. This article assumes that the machines are set up and are on the same network and can communicate with each other freely.</p>
+<h3 id="installation-media">Installation Media</h3>
+<p>In order to work through these examples you will need:</p>
+<ul>
+<li>Red Hat Enterprise Linux 8 installation media or virtual machine templates</li>
+<li>Microsoft Windows Server 2016 installation media or virtual machine templates</li>
+<li>Credentials for Red Hat Subscription Manager (RHSM)</li>
+<li>RedHat Single Sign-On installation media</li>
+</ul>
+<p>Windows Server 2016 evaluations:</p>
+<blockquote>
+<p><a href="https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016">https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2016</a></p>
+</blockquote>
+<p>Red Hat Enterprise Linux Developer instances (You can instead use CentOS):</p>
+<blockquote>
+<p><a href="https://developers.redhat.com/products/rhel/download/">https://developers.redhat.com/products/rhel/download/</a></p>
+</blockquote>
+<p>RedHat SSO media (You can instead use keycloak):</p>
+<blockquote>
+<p><a href="https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=distributions&amp;product=core.service.rhsso">https://access.redhat.com/jbossnetwork/restricted/listSoftware.html?downloadType=distributions&amp;product=core.service.rhsso</a></p>
+</blockquote>
+<h1 id="step-1-configure-the-windows-domain-controller-dc">Step 1: Configure the Windows Domain Controller (DC)</h1>
+<h3 id="install-active-directory-domain-services-ad-ds">Install Active Directory Domain Services (AD DS)</h3>
+<p>In this example, we will model a single organisation: Contoso (contoso.com). The following Powershell will install the AD Domain Services Windows feature and its dependencies, invoke the deployment module, then configure the target system as an AD DC (and configure DNS for the domain).</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Rename-Computer -NewName ad01
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Get-windowsfeature
+PS&gt; Install-WindowsFeature -name NET-Framework-Core
+PS&gt; Install-windowsfeature -name AD-Domain-Services -IncludeManagementTools
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Import-Module ADDSDeployment
+PS&gt; Install-ADDSForest `
+-CreateDnsDelegation:$false `
+-DatabasePath &#34;C:\Windows\NTDS&#34; `
+-DomainMode &#34;WinThreshold&#34; `
+-DomainName &#34;contoso.com&#34; `
+-DomainNetbiosName &#34;contoso&#34; `
+-ForestMode &#34;WinThreshold&#34; `
+-InstallDns:$true `
+-LogPath &#34;C:\Windows\NTDS&#34; `
+-NoRebootOnCompletion:$false `
+-SysvolPath &#34;C:\Windows\SYSVOL&#34; `
+-Force:$true `
+-SafeModeAdministratorPassword (ConvertTo-SecureString –String &#39;Pa33w0rd!&#39; -AsPlainText -Force)
+</code></pre></div><h3 id="validate-configuration">Validate Configuration</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Get-Service adws,kdc,netlogon,dns
+PS&gt; Get-SmbShare
+PS&gt; dcdiag /q
+PS&gt; Resolve-DnsName ad01.contoso.com
+PS&gt; Resolve-DnsName contoso.com
+</code></pre></div><h3 id="configure-users-and-groups">Configure Users and Groups</h3>
+<p>Active Directory Security Groups can group domain users with similar roles, departments, organisational responsibilities, or to reflect other organisational concerns. Permissions can then be assigned at the group level, reducing the management overhead as users join, change role or department, or leave. The following Powershell is an example that will create domain security groups, domain users, and assign those users to the groups.</p>
+<h3 id="create-directories">Create Directories</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; New-ADGroup -Name &#34;Officers&#34; -SamAccountName Officers -GroupCategory Security -GroupScope Global -DisplayName &#34;Bridge Officers&#34; -Path &#34;CN=Users,DC=contoso,DC=Com&#34; -Description &#34;Members of Bridge Officers&#34;
+PS&gt; New-ADGroup -Name &#34;Engineers&#34; -SamAccountName Engineers -GroupCategory Security -GroupScope Global -DisplayName &#34;Engineering Crew&#34; -Path &#34;CN=Users,DC=contoso,DC=Com&#34; -Description &#34;Members of Engineering Crew&#34;
+</code></pre></div><h3 id="create-users">Create Users</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; $Attributes = @{
+   Enabled = $true
+   ChangePasswordAtLogon = $false
+   UserPrincipalName = &#34;dallas@contoso.com&#34;
+   Name = &#34;dallas&#34;
+   GivenName = &#34;Captain&#34;
+   Surname = &#34;Dallas&#34;
+   DisplayName = &#34;Captain Dallas&#34;
+   Office = &#34;Bridge&#34;
+   AccountPassword = &#34;Thatfigures.&#34; | ConvertTo-SecureString -AsPlainText -Force
+}
+PS&gt; New-ADUser @Attributes
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; $Attributes = @{
+   Enabled = $true
+   ChangePasswordAtLogon = $false
+   UserPrincipalName = &#34;kane@contoso.com&#34;
+   Name = &#34;kane&#34;
+   GivenName = &#34;XO&#34;
+   Surname = &#34;Kane&#34;
+   DisplayName = &#34;XO Kane&#34;
+   Office = &#34;Bridge&#34;
+   AccountPassword = &#34;Sillyquestion?&#34; | ConvertTo-SecureString -AsPlainText -Force
+}
+PS&gt; New-ADUser @Attributes
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; $Attributes = @{
+   Enabled = $true
+   ChangePasswordAtLogon = $false
+   UserPrincipalName = &#34;parker@contoso.com&#34;
+   Name = &#34;parker&#34;
+   GivenName = &#34;Chief&#34;
+   Surname = &#34;Parker&#34;
+   DisplayName = &#34;Chief Parker&#34;
+   Office = &#34;Engineering&#34;
+   AccountPassword = &#34;Howyadoin?&#34; | ConvertTo-SecureString -AsPlainText -Force
+}
+
+PS&gt; New-ADUser @Attributes
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; New-ADUser -Name &#34;John Smith&#34; -GivenName &#34;John&#34; -Surname &#34;Smith&#34; -SamAccountName &#34;jsmith&#34; -UserPrincipalName &#34;jsmith@contoso.com&#34; -Path &#34;CN=Users,DC=contoso,DC=Com&#34; -AccountPassword(Read-Host -AsSecureString &#34;Input Password&#34;) -Enabled $true
+</code></pre></div><h3 id="add-users-to-security-groups">Add Users to Security Groups</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Add-ADGroupMember -Identity Officers -Members dallas, kane
+PS&gt; Add-ADGroupMember -Identity Engineers -Members parker
+</code></pre></div><h3 id="validate">Validate</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; net user kane
+PS&gt; net user parker
+PS&gt; net user dallas
+</code></pre></div><h3 id="create-a-gmsa-account">Create a GMSA account</h3>
+<p>This account can also be used during the Install-AdfsFarm process instead of giving credentials of an admin if preferred.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">Add-KdsRootKey -EffectiveTime (Get-Date).AddHours(-10)
+New-ADServiceAccount FsGmsa -DNSHostName ad01.contoso.com -ServicePrincipalNames http/ad01.contoso.com
+</code></pre></div><h1 id="step-2-configure-the-federation-server-adfs">Step 2: Configure the Federation Server (ADFS)</h1>
+<h3 id="install-adfs">Install ADFS</h3>
+<p>The following Powershell will install the ADFS feature and its dependencies, invoke the deployment module, and then set up a certificate. For ease of use with this being a lab environment, we created a wildcard certificate rather than the suggested method of creating specific common names.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; PS&gt; Install-windowsfeature adfs-federation –IncludeManagementTools
+PS&gt; Import-Module ADFS
+
+PS&gt; add-windowsfeature adcs-cert-authority -IncludeManagementTools
+PS&gt; Install-AdcsCertificationAuthority -CAType EnterpriseRootCa
+PS&gt; Install-PackageProvider nuget -force
+PS&gt; Install-Module -Name PSPKI -Force
+PS&gt; Import-Module -Name PSPKI
+
+PS&gt; New-SelfSignedCertificate -certstorelocation cert:\localmachine\Root -dnsname *.contoso.com
+PS&gt; Get-ChildItem -path cert:\LocalMachine\My
+</code></pre></div><h3 id="configure-adfs">Configure ADFS</h3>
+<p>When running the below Powershell, a credentials prompt appears. The format is domain\user e.g. ‘contoso.com\Administrator’. As for the below hashes, please replace them with the cert thumbprint for the wildcard cert which can be viewed again by the Get-ChildItem command.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; $fscredential = Get-Credential
+PS&gt; Get-ChildItem -path cert:\LocalMachine\My
+
+PS&gt; Install-AdfsFarm -CertificateThumbprint ################################ -FederationServiceName ad01.contoso.com -ServiceAccountCredential $fscredential
+
+PS&gt; Install-AdfsFarm -CertificateThumbprint ################################ -FederationServiceName ad01.contoso.com -ServiceAccountCredential $fscredential -OverwriteConfiguration
+
+PS&gt; Set-AdfsProperties -EnableIdPInitiatedSignonPage $true
+</code></pre></div><p>Note: If you encounter an error and want to rerun use the “-OverwriteConfiguration” flag</p>
+<h3 id="configure-device-registration-service">Configure Device Registration Service</h3>
+<p>For the prompt enter the domain and GMSA account setup earlier e.g. in this case the below</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Initialize-ADDeviceRegistration
+contoso.com\fsgmsa$
+PS&gt; Enable-AdfsDeviceRegistration
+</code></pre></div><p>Note: in Win Server 2016, the command &lsquo;Enable-AdfsDeviceRegistration&rsquo; is obsolete. The Cmdlet has been deprecated. Install-AdfsFarm and Add-AdfsFarmNode perform the required tasks to enable Device Registration Service. However, this is worth knowing if the reader is using an older version of Windows server.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Set-AdfsGlobalAuthenticationPolicy –DeviceAuthenticationEnabled $true
+</code></pre></div><h3 id="dns">DNS</h3>
+<p>Add the required DNS records associated for your environment.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Get-DnsServerResourceRecord -ZoneName contoso.com
+
+PS&gt; Add-DnsServerResourceRecordA -Name ad01 -ZoneName contoso.com -IPv4Address ###.###.##.###
+PS&gt; Get-DnsServerResourceRecord -ZoneName contoso.com -RRType A
+
+PS&gt; Add-DnsServerResourceRecordCName -ZoneName contoso.com -HostNameAlias &#34;ad01.contoso.com&#34; -Name &#34;enterpriseregistration&#34;
+PS&gt; Get-DnsServerResourceRecord -ZoneName contoso.com -RRType CName
+</code></pre></div><h1 id="step-3-configure-the-web-server-iis">Step 3: Configure the Web Server (IIS)</h1>
+<p>Install the Web Server role and Windows Identity Foundation
+The following Powershell will install the IIS feature and its dependencies as well as the dot net framework.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Install-WindowsFeature Web-Server -IncludeManagementTools -IncludeAllSubFeature -ComputerName ad01 -WhatIf
+PS&gt; Install-WindowsFeature Windows-Identity-Foundation -IncludeManagementTools
+PS&gt; Install-WindowsFeature Net-Framework-Core
+</code></pre></div><h3 id="validate-adfs">Validate ADFS</h3>
+<p>The below web address will validate if ADFS is working.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Start-Process &#34;https://ad01.contoso.com/adfs/fs/federationserverservice.asmx”
+PS&gt; Start-Process “https://ad01.contoso.com/adfs/ls/idpinitiatedsignon.htm”
+PS&gt; Start-Process “https://ad01.contoso.com/FederationMetadata/2007-06/FederationMetadata.xml”
+</code></pre></div><h1 id="step-4-rh-sso-installation">Step 4: RH-SSO Installation</h1>
+<h3 id="redhat-sso-installation">RedHat SSO installation</h3>
+<p>The following Shell will install Java8, unpack SSO in a relevant directory and setup an administrator user. In this example that user is named ‘sysadmin’.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text"># sudo yum install jdk-8
+
+$ mv rh-sso-7.3.0.GA.zip /opt
+$ cd /opt
+$ jar xf rh-sso-7.3.0.GA.zip
+$ chmod -R 770 rh-sso-7.3
+$ cd rh-sso-7.3/bin
+$ ./add-user-keycloak.sh -u sysadmin
+</code></pre></div><p>Note: amended standalone.xml to bind too all available addresses for the exercise for ease of use.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">$ cd /opt/rh-sso-7.3/standalone/configuration
+$ sed -i &#39;s/192.168.0.1/0.0.0.0/g&#39; standalone.xml
+$ ./standalone.sh
+</code></pre></div><p>A logon screen for SSO should now be available:</p>
+<blockquote>
+<p><code>http://&lt;HOST&gt;:8080/auth/</code></p>
+</blockquote>
+<p>Now using the WebConsole create a realm named ‘demo’. If you need assistance with this follow the SSO getting started guide.</p>
+<blockquote>
+<p><a href="https://access.redhat.com/documentation/en-us/red_hat_single_sign-on/7.3/html/getting_started_guide/index">https://access.redhat.com/documentation/en-us/red_hat_single_sign-on/7.3/html/getting_started_guide/index</a></p>
+</blockquote>
+<h3 id="ssl-setup">SSL setup</h3>
+<p>The Shell below checks connectivity to the ADFS server, exports that certificate, and then imports that server&rsquo;s certificate into a system truststore.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">$ cd /opt/rh-sso-7.3
+$ wget https://ad01.contoso.com/federationmetadata/2007-06/federationmetadata.xml
+$ openssl s_client -connect ad01.contoso.com:443 2&gt;/dev/null &lt;/dev/null |  sed -ne &#39;/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p&#39; &gt;&gt; ad01.cer
+$ cp ad01.cer /usr/share/pki/ca-trust-source/anchors/
+$ update-ca-trust
+$ trust list
+$ wget https://ad01.contoso.com/federationmetadata/2007-06/federationmetadata.xml
+</code></pre></div><h3 id="ssl---outgoing-http-requests">SSL - Outgoing HTTP Requests</h3>
+<p>The Shell below creates a java trust store for JBOSS to use and then imports the certificate of the ADFS server into it.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">$ cd /opt/rh-sso-7.3
+$ keytool -import -alias ad01.contoso.com -keystore truststore.jks -file ad01.cer
+</code></pre></div><p>Add the below block for the truststore configuration to the standalone.xml configuration file (near the bottom under the spi sections).</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-xml" data-lang="xml"> <span style="color:#f92672">&lt;spi</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;truststore&#34;</span><span style="color:#f92672">&gt;</span>
+     <span style="color:#f92672">&lt;provider</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;file&#34;</span> <span style="color:#a6e22e">enabled=</span><span style="color:#e6db74">&#34;true&#34;</span><span style="color:#f92672">&gt;</span>
+         <span style="color:#f92672">&lt;properties&gt;</span>
+             <span style="color:#f92672">&lt;property</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;file&#34;</span> <span style="color:#a6e22e">value=</span><span style="color:#e6db74">&#34;/opt/rh-sso-7.3/truststore.jks&#34;</span><span style="color:#f92672">/&gt;</span>
+             <span style="color:#f92672">&lt;property</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;password&#34;</span> <span style="color:#a6e22e">value=</span><span style="color:#e6db74">&#34;test77&#34;</span><span style="color:#f92672">/&gt;</span>
+             <span style="color:#f92672">&lt;property</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;hostname-verification-policy&#34;</span> <span style="color:#a6e22e">value=</span><span style="color:#e6db74">&#34;ANY&#34;</span><span style="color:#f92672">/&gt;</span>
+             <span style="color:#f92672">&lt;property</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;disabled&#34;</span> <span style="color:#a6e22e">value=</span><span style="color:#e6db74">&#34;false&#34;</span><span style="color:#f92672">/&gt;</span>
+         <span style="color:#f92672">&lt;/properties&gt;</span>
+     <span style="color:#f92672">&lt;/provider&gt;</span>
+ <span style="color:#f92672">&lt;/spi&gt;</span>
+</code></pre></div><p>After amending the standalone.xml file, restart JBOSS for the changes to pickup.</p>
+<h3 id="enabling-sslhttps-for-the-keycloak-server-inbound">Enabling SSL/HTTPS for the Keycloak Server (Inbound)</h3>
+<p>The Shell below creates a java trust store with a self-signed certificate.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">$ cd /opt/rh-sso-7.3
+$ keytool -genkey -alias localhost -keyalg RSA -keystore keycloak.jks -validity 10950
+Enter keystore password:  test77
+Re-enter new password: test77
+$ keytool -importkeystore -srckeystore keycloak.jks -destkeystore keycloak.jks -deststoretype pkcs12
+$ ./bin/kcadm.sh config truststore --trustpass test77 /opt/rh-sso-7.3/keycloak.jks
+$ cp keycloak.jks standalone/configuration
+</code></pre></div><p>The below shell will invoke the JBOSS-CLI, where we execute some JBOSS server configuration to add the keystore information and enable extra logging.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">$ cd bin
+$ ./jboss-cli.sh
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">/connect
+
+/core-service=management/security-realm=UndertowRealm:add()
+
+/core-service=management/security-realm=UndertowRealm/server-identity=ssl:add(keystore-path=keycloak.jks, keystore-relative-to=jboss.server.config.dir, keystore-password=test77)
+
+/subsystem=undertow/server=default-server/https-listener=https:write-attribute(name=security-realm, value=UndertowRealm)
+
+/reload
+
+/subsystem=logging/logger=org.keycloak.saml:add(level=DEBUG)
+
+/subsystem=logging/logger=org.keycloak.broker.saml:add(level=DEBUG)
+</code></pre></div><h1 id="step-5-sso---adfs-integration">Step 5: SSO - ADFS integration</h1>
+<p>In the RedHat SSO Web GUI configure an Identity Provider:</p>
+<ul>
+<li>Click Add Provider (SAML v2)</li>
+<li>At the bottom of the page select ‘Import from URL’ and enter the ADFS server Federation metadata URL e.g.: <code>https://ad01.contoso.com/federationmetadata/2007-06/federationmetadata.xml</code></li>
+<li>Set NameID Policy Format to email</li>
+<li>Save</li>
+</ul>
+<p><img src="/images/sso1.png#center" alt="SSO ADFS Integration"><!-- raw HTML omitted -->
+<!-- raw HTML omitted --></p>
+<p><img src="/images/sso2.png#center" alt="SSO ADFS Integration"><!-- raw HTML omitted -->
+<!-- raw HTML omitted --></p>
+<p><img src="/images/sso3.png#center" alt="SSO ADFS Integration"><!-- raw HTML omitted -->
+<!-- raw HTML omitted --></p>
+<p><img src="/images/sso4.png#center" alt="SSO ADFS Integration"><!-- raw HTML omitted -->
+<!-- raw HTML omitted --></p>
+<ul>
+<li>Export the SAML endpoint metadata</li>
+</ul>
+<p>This can then be saved and copied to the Windows Server
+Or alternatively the same metadata is available from the URL:</p>
+<blockquote>
+<p><code>https://&lt;HOST&gt;:&lt;PORT&gt;/auth/realms/&lt;Realm&gt;/broker/&lt;IdentityProvider&gt;/endpoint/descriptor</code></p>
+</blockquote>
+<p>Note: Be sure that the export metadata is using the HTTPS SSL addresses. If not, that is okay however you need to edit these addresses for HTTPS and amend the port, and you will have to do the file import on ADFS and not the URL import.</p>
+<p><img src="/images/sso5.png#center" alt="SSO ADFS Integration"></p>
+<p>Alternatively, the following URL will show the descriptor metadata, which can be used instead for the ADFS server configuration of SSO.</p>
+<blockquote>
+<p><code>https://&lt;HOST&gt;:&lt;PORT&gt;/auth/realms/&lt;Realm&gt;/broker/&lt;IdentityProvider&gt;/endpoint/descriptor</code></p>
+</blockquote>
+<h1 id="step-6-adfs---sso-integration">Step 6: ADFS - SSO integration</h1>
+<h3 id="adding-relying-party-trusts">Adding Relying Party Trusts</h3>
+<p>The following Powershell will import the metadata for the configuration details of the SSO server either from the metadata XML file previously downloaded or directly from the URL.</p>
+<p>From a File:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Add-AdfsRelyingPartyTrust -Name &#34;SSO&#34; -MetadataFile &#34;c:\metadatafile.xml&#34; -AccessControlPolicyName &#34;Permit Everyone&#34;
+</code></pre></div><p>Specify the metadata xml file as it allows the xml file to be modified, e.g. if the output is HTTP endpoints and not HTTPS.</p>
+<p>From a URL:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Add-AdfsRelyingPartyTrust -Name &#34;SSO&#34; -MetadataURL &#34;https://&lt;HOST&gt;:&lt;PORT&gt;/auth/realms/&lt;REALM_NAME&gt;/broker/saml/endpoint/descriptor&#34; -AccessControlPolicyName &#34;Permit Everyone&#34;
+</code></pre></div><p>Provide the URL for SSO’s metadata like we mentiomed earlier:</p>
+<blockquote>
+<p><code>https://&lt;HOST&gt;:8443/auth/realms/&lt;REALM_NAME&gt;/broker/saml/endpoint/descriptor</code></p>
+</blockquote>
+<p>Adding Relying Party Trusts Mapping Rules
+Create a text document e.g. &ldquo;C:\rules.txt&quot;and place the following inside it:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">@RuleTemplate = &#34;MapClaims&#34;
+@RuleName = &#34;Name ID&#34;
+c:[Type == &#34;http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsaccountname&#34;]
+ =&gt; issue(Type = &#34;http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier&#34;, Issuer = c.Issuer, OriginalIssuer = c.OriginalIssuer, Value = c.Value, ValueType = c.ValueType, Properties[&#34;http://schemas.xmlsoap.org/ws/2005/05/identity/claimproperties/format&#34;] = &#34;urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress&#34;);
+
+@RuleTemplate = &#34;LdapClaims&#34;
+@RuleName = &#34;Email, subject&#34;
+c:[Type == &#34;http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsaccountname&#34;, Issuer == &#34;AD AUTHORITY&#34;]
+ =&gt; issue(store = &#34;Active Directory&#34;, types = (&#34;http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress&#34;, &#34;http://schemas.microsoft.com/2012/12/certificatecontext/field/subjectname&#34;), query = &#34;;mail,sAMAccountName;{0}&#34;, param = c.Value);
+</code></pre></div><p>Then run the below powershell command to add the rules</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Set-AdfsRelyingPartyTrust -TargetName &#34;Destination Relying Party Trust&#34; -IssuanceTransformRulesFile &#34;C:\rules.txt&#34;
+</code></pre></div><p>If you would like to add additional rules with the ADFS Management GUI, you can then export the rules again to text with:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; (Get-AdfsRelyingPartyTrust -Name &#34;saml&#34;).IssuanceTransformRules | Out-File &#34;C:\rules.txt&#34;
+</code></pre></div><h3 id="example-of-adding-rules-via-gui-optional">Example of adding rules via GUI (optional)</h3>
+<p>The following is not needed if the previous powershell was run. However it does illustrate how to add relying party trust rules for mapping which is in fact easier initially to do via the GUI if you are unsure on exactly the mapping configuration. The two examples below show how the previous configuration was doen for mapping user ID and user attributes.</p>
+<h3 id="rule-for-mapping-user-id-gui">Rule for Mapping user ID (GUI)</h3>
+<ul>
+<li>In Relying Party Trusts select the newly created item and then in the right hand side Actions bar select ‘Edit Claim Issuance Policy’</li>
+<li>Select ‘Add Rule’</li>
+<li>For the ‘Claim rule template’ select ‘Transform an incoming claim’.</li>
+<li>Map the the below attributes:</li>
+<li>Click Finish to add the rule.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Claim rule name</th>
+<th>Name ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Incoming claim type</td>
+<td>Windows account name</td>
+</tr>
+<tr>
+<td>Outgoing claim type</td>
+<td>Name ID</td>
+</tr>
+<tr>
+<td>Outgoing name ID format</td>
+<td>Email</td>
+</tr>
+</tbody>
+</table>
+<h3 id="rule-for-mapping-the-attributes-of-the-standard-user-gui">Rule for Mapping the Attributes of the Standard User (GUI)</h3>
+<ul>
+<li>In Relying Party Trusts select the newly created item and then in the right hand side Actions bar select ‘Edit Claim Issuance Policy’
+Select ‘Add Rule’</li>
+<li>For the ‘Claim rule template’ select ‘Send LDAP attributes as Claims’.</li>
+<li>Map the following attributes:</li>
+<li>Click Finish to add the rule.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Claim rule name</th>
+<th>Name ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>E-Mail-Addresses</td>
+<td>E-Mail Address</td>
+</tr>
+<tr>
+<td>SAM-Account-Name</td>
+<td>Subject Name</td>
+</tr>
+</tbody>
+</table>
+<p>Add other attributes if needed such as your LDAP attributes for surname and given name</p>
+<h1 id="step-7-testing-and-validation">Step 7: Testing and Validation</h1>
+<p>In a web browser open your SSO logon page for the realm you setup:</p>
+<blockquote>
+<p><code>https://&lt;SSO_HOST&gt;:8443/auth/realms/&lt;REALM&gt;/account</code></p>
+</blockquote>
+<p>Click SAML, and you will be redirected to your organization&rsquo;s page (ADFS).</p>
+<p><img src="/images/sso7.png#center" alt="SSO ADFS Integration"></p>
+<p>Logon with an example users AD credentials to validate that AD domain users can authenticate against SSO with their domain credentials.</p>
+<p><img src="/images/sso8.png#center" alt="SSO ADFS Integration"></p>
+<p>You will then be logged in and redirected back to SSO, in which you will now see your account details</p>
+<p><img src="/images/sso9.png#center" alt="SSO ADFS Integration"></p>
+<p>Once a user has successfully logged on you can see a response like the below that will be found in the JBOSS server logs. Assuming that you have installed RH-SSO inline with the description above then the logs will be found at $JBOSS_HOME/standalone/logs/server.log</p>
+<p>You may have to turn on the debug in order to see these messages. This is typically done via the following commands:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">$JBOSS_HOME/bin/jboss-cli.sh --connect
+/subsystem=logging/logger=org.keycloak/:add(category=org.keycloak,level=TRACE)
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-xml" data-lang="xml"><span style="color:#75715e">&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;</span>samlp:Response ID=&#34;_b37dfe49-822b-46ec-8919-869ebfa63b2d&#34; Version=&#34;2.0&#34; IssueInstant=&#34;2020-02-20T12:26:54.794Z&#34; Destination=&#34;https://192.168.56.102:8443/auth/realms/demo/broker/saml/endpoint&#34; Consent=&#34;urn:oasis:names:tc:SAML:2.0:consent:unspecified&#34; InResponseTo=&#34;ID_dd02e34f-40b2-4a2a-b972-87be50a8a9a7&#34; xmlns:samlp=&#34;urn:oasis:names:tc:SAML:2.0:protocol&#34;&gt;
+<span style="color:#f92672">&lt;Issuer</span> <span style="color:#a6e22e">xmlns=</span><span style="color:#e6db74">&#34;urn:oasis:names:tc:SAML:2.0:assertion&#34;</span><span style="color:#f92672">&gt;</span>http://ad01.contoso.com/adfs/services/trust<span style="color:#f92672">&lt;/Issuer&gt;</span>
+<span style="color:#f92672">&lt;samlp:Status&gt;</span>
+  <span style="color:#f92672">&lt;samlp:StatusCode</span> <span style="color:#a6e22e">Value=</span><span style="color:#e6db74">&#34;urn:oasis:names:tc:SAML:2.0:status:Success&#34;</span> <span style="color:#f92672">/&gt;</span>
+<span style="color:#f92672">&lt;/samlp:Status&gt;</span>
+<span style="color:#f92672">&lt;Assertion</span> <span style="color:#a6e22e">ID=</span><span style="color:#e6db74">&#34;_8f000dc3-31cf-48c0-80d9-bcccaa409e2e&#34;</span> <span style="color:#a6e22e">IssueInstant=</span><span style="color:#e6db74">&#34;2020-02-20T12:26:54.764Z&#34;</span> <span style="color:#a6e22e">Version=</span><span style="color:#e6db74">&#34;2.0&#34;</span> <span style="color:#a6e22e">xmlns=</span><span style="color:#e6db74">&#34;urn:oasis:names:tc:SAML:2.0:assertion&#34;</span><span style="color:#f92672">&gt;</span>
+  <span style="color:#f92672">&lt;Issuer&gt;</span>http://ad01.contoso.com/adfs/services/trust<span style="color:#f92672">&lt;/Issuer&gt;</span>
+  <span style="color:#f92672">&lt;ds:Signature</span> <span style="color:#a6e22e">xmlns:ds=</span><span style="color:#e6db74">&#34;http://www.w3.org/2000/09/xmldsig#&#34;</span><span style="color:#f92672">&gt;</span>
+    <span style="color:#f92672">&lt;ds:SignedInfo&gt;</span>
+      <span style="color:#f92672">&lt;ds:CanonicalizationMethod</span> <span style="color:#a6e22e">Algorithm=</span><span style="color:#e6db74">&#34;http://www.w3.org/2001/10/xml-exc-c14n#&#34;</span> <span style="color:#f92672">/&gt;</span>
+      <span style="color:#f92672">&lt;ds:SignatureMethod</span> <span style="color:#a6e22e">Algorithm=</span><span style="color:#e6db74">&#34;http://www.w3.org/2001/04/xmldsig-more#rsa-sha256&#34;</span> <span style="color:#f92672">/&gt;</span>
+      <span style="color:#f92672">&lt;ds:Reference</span> <span style="color:#a6e22e">URI=</span><span style="color:#e6db74">&#34;#_8f000dc3-31cf-48c0-80d9-bcccaa409e2e&#34;</span><span style="color:#f92672">&gt;</span>
+        <span style="color:#f92672">&lt;ds:Transforms&gt;</span>
+          <span style="color:#f92672">&lt;ds:Transform</span> <span style="color:#a6e22e">Algorithm=</span><span style="color:#e6db74">&#34;http://www.w3.org/2000/09/xmldsig#enveloped-signature&#34;</span> <span style="color:#f92672">/&gt;</span>
+          <span style="color:#f92672">&lt;ds:Transform</span> <span style="color:#a6e22e">Algorithm=</span><span style="color:#e6db74">&#34;http://www.w3.org/2001/10/xml-exc-c14n#&#34;</span> <span style="color:#f92672">/&gt;</span>
+        <span style="color:#f92672">&lt;/ds:Transforms&gt;</span>
+        <span style="color:#f92672">&lt;ds:DigestMethod</span> <span style="color:#a6e22e">Algorithm=</span><span style="color:#e6db74">&#34;http://www.w3.org/2001/04/xmlenc#sha256&#34;</span> <span style="color:#f92672">/&gt;</span>
+        <span style="color:#f92672">&lt;ds:DigestValue&gt;</span>VnPFSxcb/KOo+YS3Lf8h7UPgTWhlAt97RdkkFD7VyXw=<span style="color:#f92672">&lt;/ds:DigestValue&gt;</span>
+      <span style="color:#f92672">&lt;/ds:Reference&gt;</span>
+    <span style="color:#f92672">&lt;/ds:SignedInfo&gt;</span>
+    <span style="color:#f92672">&lt;ds:SignatureValue&gt;</span>5mX/hgPKocmMx7hxo1eB3/xtOOmrWjxXn3qhdI041B1w0tDl4a8p/FPmVHc85BxkXLfbPYbfbB7lAsYbTNMVPtl5IzF2vsTxVuJBRRtwko39PYbPGeVhbCQMeazxUMQEAcYtD5JL4slofNYmq6biH0iYbNYgvxlh7LMmHsg2Es1GjY9DvtidbGYrtNvUSysSuuaGznZbtFWWpbDOuNubJpGTEvSYO9H2AAqx9cY9376bBF6ui/deQ/4mTFK5OY3nvYdi4hs4s/fN4qvdqKm9JbuBjV3tuFZ8WEJrwFApD05yqJRA4bZkjyjU1Y0C/zGp4RaFE026Uv20wdr1gX7W/g==<span style="color:#f92672">&lt;/ds:SignatureValue&gt;</span>
+    <span style="color:#f92672">&lt;KeyInfo</span> <span style="color:#a6e22e">xmlns=</span><span style="color:#e6db74">&#34;http://www.w3.org/2000/09/xmldsig#&#34;</span><span style="color:#f92672">&gt;</span>
+      <span style="color:#f92672">&lt;ds:X509Data&gt;</span>
+        <span style="color:#f92672">&lt;ds:X509Certificate&gt;</span>MIIC3DCCAcSgAwIBAgIQJjwM5Bqr44xDPLzkb1zUEDANBgkqhkiG9w0BAQsFADAqMSgwJgYDVQQDEx9BREZTIFNpZ25pbmcgLSBhZDAxLmNvbnRvc28uY29tMB4XDTIwMDIxOTEwNDQyOFoXDTIxMDIxODEwNDQyOFowKjEoMCYGA1UEAxMfQURGUyBTaWduaW5nIC0gYWQwMS5jb250b3NvLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAO6P4+vK085uyOqs+0++l4KAk6tF6x4RScYecCYwcaFg+VqaOI1dvrwaVMSLLi39ORUEVNIw+Ju5YbjCB3tVINliW+P1wnf7Y3k0QHEgXZTmJ19FbGjHySNDXSkd+4J242kiuYZfU1nQfCkCLCqXgSZwj5apnaV1cNgKxB9TE0cDl1FF3O1j2t7P+kTV+rEOZuIWy4UJfwGRQFBxTIB95pKJssY5vB/3MldXKOspdjXg6zvmpQ3Jjx50lbyxLGVlol/otPa7UAQtFzW1D7Bbl6V5GE06OSGcO9KI1dtKwKoiTC5B5FGXGAiYRBcLV7adzEANpVpwOTdzq6DSjFY8dC8CAwEAATANBgkqhkiG9w0BAQsFAAOCAQEAmFk1RNHAvj5VLzgBMVyA4NY3ruSuV9JMnPnmLabM/KXOiczWq+4sqLRCyB4gREm/gxkORqlAwrW0Rla3ZSpYRjvSIMmWL2bHZu52hrJMkxLQu1laNI1bRXalchcuWxkgaj2LMiT3sPogf6/Y8Ffizn6wyqOXyVLSJoFSEBHiuKoaKDlpz/rRd7bNDenIYyNr6mOA2rpAptG4EjSlAVX2YuholFF1kizdOmSCS+Y8k3/9fhgYYQ7hHZr5ObAOkjUucRO/OwZtghkUtMnrf+KCrLDsUTAwNCxbxtk1ACDjDfwRau9vq42YLqqAgAoitfdccnWOGdi9RmubHVAkXfSdlQ==<span style="color:#f92672">&lt;/ds:X509Certificate&gt;</span>
+      <span style="color:#f92672">&lt;/ds:X509Data&gt;</span>
+    <span style="color:#f92672">&lt;/KeyInfo&gt;</span>
+  <span style="color:#f92672">&lt;/ds:Signature&gt;</span>
+  <span style="color:#f92672">&lt;Subject&gt;</span>
+    <span style="color:#f92672">&lt;NameID</span> <span style="color:#a6e22e">Format=</span><span style="color:#e6db74">&#34;urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress&#34;</span><span style="color:#f92672">&gt;</span>contoso\Administrator<span style="color:#f92672">&lt;/NameID&gt;</span>
+    <span style="color:#f92672">&lt;SubjectConfirmation</span> <span style="color:#a6e22e">Method=</span><span style="color:#e6db74">&#34;urn:oasis:names:tc:SAML:2.0:cm:bearer&#34;</span><span style="color:#f92672">&gt;</span>
+      <span style="color:#f92672">&lt;SubjectConfirmationData</span> <span style="color:#a6e22e">InResponseTo=</span><span style="color:#e6db74">&#34;ID_dd02e34f-40b2-4a2a-b972-87be50a8a9a7&#34;</span> <span style="color:#a6e22e">NotOnOrAfter=</span><span style="color:#e6db74">&#34;2020-02-20T12:31:54.801Z&#34;</span> <span style="color:#a6e22e">Recipient=</span><span style="color:#e6db74">&#34;https://192.168.56.102:8443/auth/realms/demo/broker/saml/endpoint&#34;</span> <span style="color:#f92672">/&gt;</span>
+    <span style="color:#f92672">&lt;/SubjectConfirmation&gt;</span>
+  <span style="color:#f92672">&lt;/Subject&gt;</span>
+  <span style="color:#f92672">&lt;Conditions</span> <span style="color:#a6e22e">NotBefore=</span><span style="color:#e6db74">&#34;2020-02-20T12:26:54.755Z&#34;</span> <span style="color:#a6e22e">NotOnOrAfter=</span><span style="color:#e6db74">&#34;2020-02-20T13:26:54.755Z&#34;</span><span style="color:#f92672">&gt;</span>
+    <span style="color:#f92672">&lt;AudienceRestriction&gt;</span>
+      <span style="color:#f92672">&lt;Audience&gt;</span>https://192.168.56.102:8443/auth/realms/demo<span style="color:#f92672">&lt;/Audience&gt;</span>
+    <span style="color:#f92672">&lt;/AudienceRestriction&gt;</span>
+  <span style="color:#f92672">&lt;/Conditions&gt;</span>
+  <span style="color:#f92672">&lt;AttributeStatement&gt;</span>
+    <span style="color:#f92672">&lt;Attribute</span> <span style="color:#a6e22e">Name=</span><span style="color:#e6db74">&#34;http://schemas.microsoft.com/2012/12/certificatecontext/field/subjectname&#34;</span><span style="color:#f92672">&gt;</span>
+      <span style="color:#f92672">&lt;AttributeValue&gt;</span>Administrator<span style="color:#f92672">&lt;/AttributeValue&gt;</span>
+    <span style="color:#f92672">&lt;/Attribute&gt;</span>
+  <span style="color:#f92672">&lt;/AttributeStatement&gt;</span>
+  <span style="color:#f92672">&lt;AuthnStatement</span> <span style="color:#a6e22e">AuthnInstant=</span><span style="color:#e6db74">&#34;2020-02-20T12:26:54.643Z&#34;</span> <span style="color:#a6e22e">SessionIndex=</span><span style="color:#e6db74">&#34;_8f000dc3-31cf-48c0-80d9-bcccaa409e2e&#34;</span><span style="color:#f92672">&gt;</span>
+    <span style="color:#f92672">&lt;AuthnContext&gt;</span>
+      <span style="color:#f92672">&lt;AuthnContextClassRef&gt;</span>urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport<span style="color:#f92672">&lt;/AuthnContextClassRef&gt;</span>
+    <span style="color:#f92672">&lt;/AuthnContext&gt;</span>
+  <span style="color:#f92672">&lt;/AuthnStatement&gt;</span>
+<span style="color:#f92672">&lt;/Assertion&gt;</span>
+<span style="color:#f92672">&lt;/samlp:Response&gt;</span>
+</code></pre></div><p>Congratulations. You have successfully setup SSO integration with ADFS.</p>
+
+                    
+                    <HR width="100%" id="EOF">
+                    <p style="color:#777;">Last modified on 2020-04-11</p>
+                    
+                </div>
+            </div>
+
+
+            <nav class="post-pagination">
+
+                
+                <a class="newer-posts">
+                    Next<br>No newer posts.
+                </a>
+                
+
+                
+                <a class="older-posts" href="https://sysadm.life/posts/porting_golang_to_sparc/">
+                    Previous<br>Porting Go to SPARC Solaris
+                </a>
+                
+            </nav>
+            <div class="post-comment-wrapper">
+                
+                <p style="opacity: 0.6" align="center">
+                    <small>Comments Disabled.</small>
+                </p>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+            </div><div id="single-column-footer">
+Hugo Theme <a href="https://github.com/amazingrise/hugo-theme-diary">Diary</a> by <a href="https://amazingrise.net">Rise</a>
+<br>
+Ported from <a href="https://mak1t0.cc/" target="_blank" rel="noreferrer noopener">Makito</a>'s <a href="https://github.com/SumiMakito/hexo-theme-journal/" target="_blank" rel="noreferrer noopener">Journal.</a> <br>
+<br>
+
+</div>
+            </div>
+    <script>
+let app;
+
+app = new Vue({
+    el: '#app',
+    data: {
+        scrollY: 0,
+        navOpacity: 0,
+        isDrawerOpen: false,
+        mounted: false,
+        isDarkMode: false
+    },
+    methods: {
+            sgn(t, x) {
+                let k = 1. / (1. - 2 * t);
+                if (x <= t) return 0;
+                else if (x >= 1 - t) return 1;
+                else {
+                    return k * (x - t);
+                }
+            },
+            handleScroll() {
+                this.scrollY = window.scrollY;
+                this.navOpacity = this.sgn(.0, Math.min(1, Math.max(0, window.scrollY / (this.pageHeadHeight() - this.navBarHeight() * 0.8))));
+                const {navBar, navBackground, navTitle, extraContainer, streamContainer} = this.$refs;
+
+                if (this.navOpacity >= 1) {
+                    navBackground.style.opacity = 1;
+                    navTitle.style.opacity = 1;
+                } else {
+                    navBackground.style.opacity = 0;
+                    navTitle.style.opacity = 0;
+                }
+            },
+            handleResize() {
+                const {navBar, navBackground, navTitle, extraContainer, streamContainer} = this.$refs;
+                extraContainer.style.left = (streamContainer.offsetWidth - extraContainer.offsetWidth) + 'px';
+            },
+            navBarHeight() {
+                return this.$refs.navBar.offsetHeight;
+            },
+            pageHeadHeight() {
+                return this.$refs.pageHead.offsetHeight;
+            },
+            toggleDrawer() {
+                this.isDrawerOpen = !this.isDrawerOpen;
+                document.getElementsByTagName('html')[0].style.overflow = this.isDrawerOpen ? 'hidden' : 'unset';
+            },
+            closeDrawer() {
+                this.isDrawerOpen = false;
+                document.getElementsByTagName('html')[0].style.overflow = this.isDrawerOpen ? 'hidden' : 'unset';
+            },
+            toggleDarkMode() {
+                this.isDarkMode = !this.isDarkMode;
+                if (this.isDarkMode==true){
+                    document.cookie = "night=1;path=/";
+                    document.body.classList.add("night");
+                } else {
+                    document.cookie = "night=0;path=/";
+                    document.body.classList.remove("night");
+                }
+            }
+    },
+    created() {
+        window.addEventListener('scroll', this.handleScroll);
+        window.addEventListener('resize', this.handleResize);
+        window._nonDesktop = function () {
+            let check = false;
+            (function (a) {
+                if (/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino|android|ipad|playbook|silk/i.test(a) || /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0, 4))) check = true;
+            })(navigator.userAgent || navigator.vendor || window.opera);
+            return check;
+        };
+        
+        var night = document.cookie.replace(/(?:(?:^|.*;\s*)night\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+        if (night==""){
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                
+            }
+        }else{
+            
+            if (night=="1") {
+                this.toggleDarkMode();
+            }
+        }
+    },
+    mounted() {
+        this.handleScroll();
+        this.handleResize();
+        this.mounted = true;
+        
+    },
+    destroyed() {
+        window.removeEventListener('scroll', this.handleScroll);
+        window.removeEventListener('resize', this.handleResize);
+    }
+});
+</script>
+
+<script src="https://sysadm.life/js/journal.js"></script>
+    </body>
+</html>

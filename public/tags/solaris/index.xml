@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Solaris on sysadm.life</title>
+    <link>https://sysadm.life/tags/solaris/</link>
+    <description>Recent content in Solaris on sysadm.life</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 18 Dec 2018 18:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="https://sysadm.life/tags/solaris/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Porting Go to SPARC Solaris</title>
+      <link>https://sysadm.life/posts/porting_golang_to_sparc/</link>
+      <pubDate>Tue, 18 Dec 2018 18:00:00 +0000</pubDate>
+      
+      <guid>https://sysadm.life/posts/porting_golang_to_sparc/</guid>
+      <description>This article aims to present the steps required to create a port of Go for SPARC Solaris. The &amp;lsquo;spark&amp;rsquo; that kicked this idea off was part of an aspiration to first get the Prometheus node exporter for the core machine metrics running on SPARC tin for Solaris 11.3, then potentially other node exporters such as the JMX exporter and a Oracle DB exporter.
+Note: Oracle announced Go version 1.7.6 will be available in Solaris 11.</description>
+    </item>
+    
+  </channel>
+</rss>

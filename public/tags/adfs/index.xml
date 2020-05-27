@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>ADFS on sysadm.life</title>
+    <link>https://sysadm.life/tags/adfs/</link>
+    <description>Recent content in ADFS on sysadm.life</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 11 Apr 2020 18:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="https://sysadm.life/tags/adfs/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>RH-SSO (Keycloak) to ADFS Integration using SAML</title>
+      <link>https://sysadm.life/posts/rh_sso_keycloak_to_adfs_using_saml_integration/</link>
+      <pubDate>Sat, 11 Apr 2020 18:00:00 +0000</pubDate>
+      
+      <guid>https://sysadm.life/posts/rh_sso_keycloak_to_adfs_using_saml_integration/</guid>
+      <description>This article aims to present the steps required to create the minimum necessary infrastructure, to gain familiarity with, and test Red Hat Single Sign-On (SSO) and its integration with Microsoft Active Federation Services (ADFS) via the SAML protocol.
+Most businesses usually have a large Windows estate and therefore use Active Directory (AD) as it provides a single source of user management in the organisation. Many organizations often incorporate additional authentication programs and protocols in tandem with AD, including RH-SSO for example.</description>
+    </item>
+    
+  </channel>
+</rss>
