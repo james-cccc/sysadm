@@ -401,14 +401,14 @@ Ported from <a href="https://mak1t0.cc/" target="_blank" rel="noreferrer noopene
 <p>What I ended up doing was compiling Go on an x86 based Linux system and then copying that over and using it on my sparc based Solaris system.</p>
 <h2 id="lets-give-it-a-go">Let&rsquo;s give it a GO!</h2>
 <p>First things first, let&rsquo;s stage the required media and get Go installed on our Linux box.</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">mkdir -p /opt/stage
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">mkdir -p /opt/stage
 cd /opt/stage
 wget https://dl.google.com/go/go1.12.5.linux-amd64.tar.gz
 tar -C /usr/local -xzf go1.12.5.linux-amd64.tar.gz
 export PATH=$PATH:/usr/local/go/bin
 git clone https://github.com/4ad/go.git
 </code></pre></div><p>Now every thing is in place, time to try a build for SPARC Solaris:</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">cd /opt/stage/go
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">cd /opt/stage/go
 echo &#34;GO_build_01&#34; &gt;&gt; VERSION
 
 export GOROOT_BOOTSTRAP=/usr/local/go
@@ -420,32 +420,32 @@ export GOOS=solaris
 cd /opt/stage/go/src
 ./make.bash
 </code></pre></div><p>Great, that looked to have worked. Now let&rsquo;s archive that up and get it over to the SPARC server.</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">cd /opt/stage
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">cd /opt/stage
 tar -cvf go_go_sun.tar go
 </code></pre></div><h2 id="testing">Testing</h2>
 <p>Here&rsquo;s a quick example of building and running a &lsquo;Hello World&rsquo; program. All the below steps are performed on a Solaris 11.3 zone.</p>
 <p>Sample code for &lsquo;hello.go&rsquo;:</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8b008b;font-weight:bold">package</span> main
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
 
-<span style="color:#8b008b;font-weight:bold">import</span> <span style="color:#cd5555">&#34;fmt&#34;</span>
+<span style="color:#f92672">import</span> <span style="color:#e6db74">&#34;fmt&#34;</span>
 
-<span style="color:#8b008b;font-weight:bold">func</span> <span style="color:#008b45">main</span>() {
-        fmt.<span style="color:#008b45">Printf</span>(<span style="color:#cd5555">&#34;hello, world\n&#34;</span>)
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+        <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;hello, world\n&#34;</span>)
 }
 </code></pre></div><p>After copying over and extracting our &lsquo;go_go_sun.tar&rsquo; archive to &lsquo;/usr/local/gosparc&rsquo; set the below relevant enviorment variables.</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">mkdir /usr/local/gosparc
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">mkdir /usr/local/gosparc
 export GOOS=solaris
 export GOARCH=sparc64
 export PATH=$PATH:/usr/local/gosparc/go/bin/solaris_sparc64
 go build
 </code></pre></div><p>Post performing the build for our &lsquo;Hello World&rsquo; application we now have a &lsquo;hello&rsquo; binary.</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">ls -l
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">ls -l
   total 1675
   -rw-r--r--   1 user     user          82 Jun  5 17:06 hello.go
   -rwxr-xr-x   1 user     user     1814246 Jun  6 09:52 hello
-</code></pre></div><div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">./hello
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">./hello
   hello, world
-</code></pre></div><div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">go version
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">go version
   go version GO_build_01 solaris/sparc64
 </code></pre></div><p>Great it works!</p>
 
@@ -461,7 +461,7 @@ go build
 
                 
                 <a class="newer-posts" href="https://sysadm.life/posts/rh_sso_keycloak_to_adfs_using_saml_integration/">
-                    Next<br>RH-SSO (Keycloak) to ADFS Integration using SAML
+                    Next<br>Integrating RH-SSO (Keycloak) to ADFS
                 </a>
                 
 

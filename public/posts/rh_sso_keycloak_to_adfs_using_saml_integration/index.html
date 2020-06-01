@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html><head>
-<title>RH-SSO (Keycloak) to ADFS Integration using SAML</title>
+<title>Integrating RH-SSO (Keycloak) to ADFS</title>
 
 <meta charset="utf-8">
 <meta name="X-UA-Compatible" content="IE=edge">
 <meta name="google-site-verification" content="">
 <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
 <meta content="telephone=no" name="format-detection">
-<meta name="description" content="Learn how to implement a basic authentication combination configuration in your organization by identity brokering ADFS authentication with Red Hat Single Sign On (Keycloak) using SAML">
+<meta name="description" content="Implement a basic authentication combination configuration by identity brokering ADFS with RedHat SSO (Keycloak)">
 <meta name="renderer" content="webkit">
 <meta name="theme-color" content="#ffffff">
 
@@ -2015,10 +2015,10 @@ Ported from <a href="https://mak1t0.cc/" target="_blank" rel="noreferrer noopene
                 
             >
                 <div class="post-title">
-                    RH-SSO (Keycloak) to ADFS Integration using SAML
+                    Integrating RH-SSO (Keycloak) to ADFS
                     
                     <div class="post-subtitle">
-                        Learn how to implement a basic authentication combination configuration in your organization by identity brokering ADFS authentication with Red Hat Single Sign On (Keycloak) using SAML
+                        Implement a basic authentication combination configuration by identity brokering ADFS with RedHat SSO (Keycloak)
                     </div>
                     
                     <div class="post-meta">
@@ -2156,11 +2156,11 @@ Ported from <a href="https://mak1t0.cc/" target="_blank" rel="noreferrer noopene
 <h1 id="step-1-configure-the-windows-domain-controller-dc">Step 1: Configure the Windows Domain Controller (DC)</h1>
 <h3 id="install-active-directory-domain-services-ad-ds">Install Active Directory Domain Services (AD DS)</h3>
 <p>In this example, we will model a single organisation: Contoso (contoso.com). The following Powershell will install the AD Domain Services Windows feature and its dependencies, invoke the deployment module, then configure the target system as an AD DC (and configure DNS for the domain).</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Rename-Computer -NewName ad01
-</code></pre></div><div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Get-windowsfeature
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Rename-Computer -NewName ad01
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Get-windowsfeature
 PS&gt; Install-WindowsFeature -name NET-Framework-Core
 PS&gt; Install-windowsfeature -name AD-Domain-Services -IncludeManagementTools
-</code></pre></div><div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Import-Module ADDSDeployment
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Import-Module ADDSDeployment
 PS&gt; Install-ADDSForest `
 -CreateDnsDelegation:$false `
 -DatabasePath &#34;C:\Windows\NTDS&#34; `
@@ -2175,7 +2175,7 @@ PS&gt; Install-ADDSForest `
 -Force:$true `
 -SafeModeAdministratorPassword (ConvertTo-SecureString –String &#39;Pa33w0rd!&#39; -AsPlainText -Force)
 </code></pre></div><h3 id="validate-configuration">Validate Configuration</h3>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Get-Service adws,kdc,netlogon,dns
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Get-Service adws,kdc,netlogon,dns
 PS&gt; Get-SmbShare
 PS&gt; dcdiag /q
 PS&gt; Resolve-DnsName ad01.contoso.com
@@ -2183,10 +2183,10 @@ PS&gt; Resolve-DnsName contoso.com
 </code></pre></div><h3 id="configure-users-and-groups">Configure Users and Groups</h3>
 <p>Active Directory Security Groups can group domain users with similar roles, departments, organisational responsibilities, or to reflect other organisational concerns. Permissions can then be assigned at the group level, reducing the management overhead as users join, change role or department, or leave. The following Powershell is an example that will create domain security groups, domain users, and assign those users to the groups.</p>
 <h3 id="create-directories">Create Directories</h3>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; New-ADGroup -Name &#34;Officers&#34; -SamAccountName Officers -GroupCategory Security -GroupScope Global -DisplayName &#34;Bridge Officers&#34; -Path &#34;CN=Users,DC=contoso,DC=Com&#34; -Description &#34;Members of Bridge Officers&#34;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; New-ADGroup -Name &#34;Officers&#34; -SamAccountName Officers -GroupCategory Security -GroupScope Global -DisplayName &#34;Bridge Officers&#34; -Path &#34;CN=Users,DC=contoso,DC=Com&#34; -Description &#34;Members of Bridge Officers&#34;
 PS&gt; New-ADGroup -Name &#34;Engineers&#34; -SamAccountName Engineers -GroupCategory Security -GroupScope Global -DisplayName &#34;Engineering Crew&#34; -Path &#34;CN=Users,DC=contoso,DC=Com&#34; -Description &#34;Members of Engineering Crew&#34;
 </code></pre></div><h3 id="create-users">Create Users</h3>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; $Attributes = @{
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; $Attributes = @{
    Enabled = $true
    ChangePasswordAtLogon = $false
    UserPrincipalName = &#34;dallas@contoso.com&#34;
@@ -2198,7 +2198,7 @@ PS&gt; New-ADGroup -Name &#34;Engineers&#34; -SamAccountName Engineers -GroupCat
    AccountPassword = &#34;Thatfigures.&#34; | ConvertTo-SecureString -AsPlainText -Force
 }
 PS&gt; New-ADUser @Attributes
-</code></pre></div><div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; $Attributes = @{
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; $Attributes = @{
    Enabled = $true
    ChangePasswordAtLogon = $false
    UserPrincipalName = &#34;kane@contoso.com&#34;
@@ -2210,7 +2210,7 @@ PS&gt; New-ADUser @Attributes
    AccountPassword = &#34;Sillyquestion?&#34; | ConvertTo-SecureString -AsPlainText -Force
 }
 PS&gt; New-ADUser @Attributes
-</code></pre></div><div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; $Attributes = @{
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; $Attributes = @{
    Enabled = $true
    ChangePasswordAtLogon = $false
    UserPrincipalName = &#34;parker@contoso.com&#34;
@@ -2223,22 +2223,22 @@ PS&gt; New-ADUser @Attributes
 }
 
 PS&gt; New-ADUser @Attributes
-</code></pre></div><div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; New-ADUser -Name &#34;John Smith&#34; -GivenName &#34;John&#34; -Surname &#34;Smith&#34; -SamAccountName &#34;jsmith&#34; -UserPrincipalName &#34;jsmith@contoso.com&#34; -Path &#34;CN=Users,DC=contoso,DC=Com&#34; -AccountPassword(Read-Host -AsSecureString &#34;Input Password&#34;) -Enabled $true
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; New-ADUser -Name &#34;John Smith&#34; -GivenName &#34;John&#34; -Surname &#34;Smith&#34; -SamAccountName &#34;jsmith&#34; -UserPrincipalName &#34;jsmith@contoso.com&#34; -Path &#34;CN=Users,DC=contoso,DC=Com&#34; -AccountPassword(Read-Host -AsSecureString &#34;Input Password&#34;) -Enabled $true
 </code></pre></div><h3 id="add-users-to-security-groups">Add Users to Security Groups</h3>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Add-ADGroupMember -Identity Officers -Members dallas, kane
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Add-ADGroupMember -Identity Officers -Members dallas, kane
 PS&gt; Add-ADGroupMember -Identity Engineers -Members parker
 </code></pre></div><h3 id="validate">Validate</h3>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; net user kane
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; net user kane
 PS&gt; net user parker
 PS&gt; net user dallas
 </code></pre></div><h3 id="create-a-gmsa-account">Create a GMSA account</h3>
 <p>This account can also be used during the Install-AdfsFarm process instead of giving credentials of an admin if preferred.</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">Add-KdsRootKey -EffectiveTime (Get-Date).AddHours(-10)
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">Add-KdsRootKey -EffectiveTime (Get-Date).AddHours(-10)
 New-ADServiceAccount FsGmsa -DNSHostName ad01.contoso.com -ServicePrincipalNames http/ad01.contoso.com
 </code></pre></div><h1 id="step-2-configure-the-federation-server-adfs">Step 2: Configure the Federation Server (ADFS)</h1>
 <h3 id="install-adfs">Install ADFS</h3>
 <p>The following Powershell will install the ADFS feature and its dependencies, invoke the deployment module, and then set up a certificate. For ease of use with this being a lab environment, we created a wildcard certificate rather than the suggested method of creating specific common names.</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; PS&gt; Install-windowsfeature adfs-federation –IncludeManagementTools
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; PS&gt; Install-windowsfeature adfs-federation –IncludeManagementTools
 PS&gt; Import-Module ADFS
 
 PS&gt; add-windowsfeature adcs-cert-authority -IncludeManagementTools
@@ -2251,7 +2251,7 @@ PS&gt; New-SelfSignedCertificate -certstorelocation cert:\localmachine\Root -dns
 PS&gt; Get-ChildItem -path cert:\LocalMachine\My
 </code></pre></div><h3 id="configure-adfs">Configure ADFS</h3>
 <p>When running the below Powershell, a credentials prompt appears. The format is domain\user e.g. ‘contoso.com\Administrator’. As for the below hashes, please replace them with the cert thumbprint for the wildcard cert which can be viewed again by the Get-ChildItem command.</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; $fscredential = Get-Credential
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; $fscredential = Get-Credential
 PS&gt; Get-ChildItem -path cert:\LocalMachine\My
 
 PS&gt; Install-AdfsFarm -CertificateThumbprint ################################ -FederationServiceName ad01.contoso.com -ServiceAccountCredential $fscredential
@@ -2262,14 +2262,14 @@ PS&gt; Set-AdfsProperties -EnableIdPInitiatedSignonPage $true
 </code></pre></div><p>Note: If you encounter an error and want to rerun use the “-OverwriteConfiguration” flag</p>
 <h3 id="configure-device-registration-service">Configure Device Registration Service</h3>
 <p>For the prompt enter the domain and GMSA account setup earlier e.g. in this case the below</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Initialize-ADDeviceRegistration
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Initialize-ADDeviceRegistration
 contoso.com\fsgmsa$
 PS&gt; Enable-AdfsDeviceRegistration
 </code></pre></div><p>Note: in Win Server 2016, the command &lsquo;Enable-AdfsDeviceRegistration&rsquo; is obsolete. The Cmdlet has been deprecated. Install-AdfsFarm and Add-AdfsFarmNode perform the required tasks to enable Device Registration Service. However, this is worth knowing if the reader is using an older version of Windows server.</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Set-AdfsGlobalAuthenticationPolicy –DeviceAuthenticationEnabled $true
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Set-AdfsGlobalAuthenticationPolicy –DeviceAuthenticationEnabled $true
 </code></pre></div><h3 id="dns">DNS</h3>
 <p>Add the required DNS records associated for your environment.</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Get-DnsServerResourceRecord -ZoneName contoso.com
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Get-DnsServerResourceRecord -ZoneName contoso.com
 
 PS&gt; Add-DnsServerResourceRecordA -Name ad01 -ZoneName contoso.com -IPv4Address ###.###.##.###
 PS&gt; Get-DnsServerResourceRecord -ZoneName contoso.com -RRType A
@@ -2279,18 +2279,18 @@ PS&gt; Get-DnsServerResourceRecord -ZoneName contoso.com -RRType CName
 </code></pre></div><h1 id="step-3-configure-the-web-server-iis">Step 3: Configure the Web Server (IIS)</h1>
 <p>Install the Web Server role and Windows Identity Foundation
 The following Powershell will install the IIS feature and its dependencies as well as the dot net framework.</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Install-WindowsFeature Web-Server -IncludeManagementTools -IncludeAllSubFeature -ComputerName ad01 -WhatIf
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Install-WindowsFeature Web-Server -IncludeManagementTools -IncludeAllSubFeature -ComputerName ad01 -WhatIf
 PS&gt; Install-WindowsFeature Windows-Identity-Foundation -IncludeManagementTools
 PS&gt; Install-WindowsFeature Net-Framework-Core
 </code></pre></div><h3 id="validate-adfs">Validate ADFS</h3>
 <p>The below web address will validate if ADFS is working.</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Start-Process &#34;https://ad01.contoso.com/adfs/fs/federationserverservice.asmx”
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Start-Process &#34;https://ad01.contoso.com/adfs/fs/federationserverservice.asmx”
 PS&gt; Start-Process “https://ad01.contoso.com/adfs/ls/idpinitiatedsignon.htm”
 PS&gt; Start-Process “https://ad01.contoso.com/FederationMetadata/2007-06/FederationMetadata.xml”
 </code></pre></div><h1 id="step-4-rh-sso-installation">Step 4: RH-SSO Installation</h1>
 <h3 id="redhat-sso-installation">RedHat SSO installation</h3>
 <p>The following Shell will install Java8, unpack SSO in a relevant directory and setup an administrator user. In this example that user is named ‘sysadmin’.</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text"># sudo yum install jdk-8
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text"># sudo yum install jdk-8
 
 $ mv rh-sso-7.3.0.GA.zip /opt
 $ cd /opt
@@ -2299,7 +2299,7 @@ $ chmod -R 770 rh-sso-7.3
 $ cd rh-sso-7.3/bin
 $ ./add-user-keycloak.sh -u sysadmin
 </code></pre></div><p>Note: amended standalone.xml to bind too all available addresses for the exercise for ease of use.</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">$ cd /opt/rh-sso-7.3/standalone/configuration
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">$ cd /opt/rh-sso-7.3/standalone/configuration
 $ sed -i &#39;s/192.168.0.1/0.0.0.0/g&#39; standalone.xml
 $ ./standalone.sh
 </code></pre></div><p>A logon screen for SSO should now be available:</p>
@@ -2312,7 +2312,7 @@ $ ./standalone.sh
 </blockquote>
 <h3 id="ssl-setup">SSL setup</h3>
 <p>The Shell below checks connectivity to the ADFS server, exports that certificate, and then imports that server&rsquo;s certificate into a system truststore.</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">$ cd /opt/rh-sso-7.3
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">$ cd /opt/rh-sso-7.3
 $ wget https://ad01.contoso.com/federationmetadata/2007-06/federationmetadata.xml
 $ openssl s_client -connect ad01.contoso.com:443 2&gt;/dev/null &lt;/dev/null |  sed -ne &#39;/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p&#39; &gt;&gt; ad01.cer
 $ cp ad01.cer /usr/share/pki/ca-trust-source/anchors/
@@ -2321,23 +2321,23 @@ $ trust list
 $ wget https://ad01.contoso.com/federationmetadata/2007-06/federationmetadata.xml
 </code></pre></div><h3 id="ssl---outgoing-http-requests">SSL - Outgoing HTTP Requests</h3>
 <p>The Shell below creates a java trust store for JBOSS to use and then imports the certificate of the ADFS server into it.</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">$ cd /opt/rh-sso-7.3
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">$ cd /opt/rh-sso-7.3
 $ keytool -import -alias ad01.contoso.com -keystore truststore.jks -file ad01.cer
 </code></pre></div><p>Add the below block for the truststore configuration to the standalone.xml configuration file (near the bottom under the spi sections).</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-xml" data-lang="xml"> <span style="color:#8b008b;font-weight:bold">&lt;spi</span> <span style="color:#658b00">name=</span><span style="color:#cd5555">&#34;truststore&#34;</span><span style="color:#8b008b;font-weight:bold">&gt;</span>
-     <span style="color:#8b008b;font-weight:bold">&lt;provider</span> <span style="color:#658b00">name=</span><span style="color:#cd5555">&#34;file&#34;</span> <span style="color:#658b00">enabled=</span><span style="color:#cd5555">&#34;true&#34;</span><span style="color:#8b008b;font-weight:bold">&gt;</span>
-         <span style="color:#8b008b;font-weight:bold">&lt;properties&gt;</span>
-             <span style="color:#8b008b;font-weight:bold">&lt;property</span> <span style="color:#658b00">name=</span><span style="color:#cd5555">&#34;file&#34;</span> <span style="color:#658b00">value=</span><span style="color:#cd5555">&#34;/opt/rh-sso-7.3/truststore.jks&#34;</span><span style="color:#8b008b;font-weight:bold">/&gt;</span>
-             <span style="color:#8b008b;font-weight:bold">&lt;property</span> <span style="color:#658b00">name=</span><span style="color:#cd5555">&#34;password&#34;</span> <span style="color:#658b00">value=</span><span style="color:#cd5555">&#34;test77&#34;</span><span style="color:#8b008b;font-weight:bold">/&gt;</span>
-             <span style="color:#8b008b;font-weight:bold">&lt;property</span> <span style="color:#658b00">name=</span><span style="color:#cd5555">&#34;hostname-verification-policy&#34;</span> <span style="color:#658b00">value=</span><span style="color:#cd5555">&#34;ANY&#34;</span><span style="color:#8b008b;font-weight:bold">/&gt;</span>
-             <span style="color:#8b008b;font-weight:bold">&lt;property</span> <span style="color:#658b00">name=</span><span style="color:#cd5555">&#34;disabled&#34;</span> <span style="color:#658b00">value=</span><span style="color:#cd5555">&#34;false&#34;</span><span style="color:#8b008b;font-weight:bold">/&gt;</span>
-         <span style="color:#8b008b;font-weight:bold">&lt;/properties&gt;</span>
-     <span style="color:#8b008b;font-weight:bold">&lt;/provider&gt;</span>
- <span style="color:#8b008b;font-weight:bold">&lt;/spi&gt;</span>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-xml" data-lang="xml"> <span style="color:#f92672">&lt;spi</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;truststore&#34;</span><span style="color:#f92672">&gt;</span>
+     <span style="color:#f92672">&lt;provider</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;file&#34;</span> <span style="color:#a6e22e">enabled=</span><span style="color:#e6db74">&#34;true&#34;</span><span style="color:#f92672">&gt;</span>
+         <span style="color:#f92672">&lt;properties&gt;</span>
+             <span style="color:#f92672">&lt;property</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;file&#34;</span> <span style="color:#a6e22e">value=</span><span style="color:#e6db74">&#34;/opt/rh-sso-7.3/truststore.jks&#34;</span><span style="color:#f92672">/&gt;</span>
+             <span style="color:#f92672">&lt;property</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;password&#34;</span> <span style="color:#a6e22e">value=</span><span style="color:#e6db74">&#34;test77&#34;</span><span style="color:#f92672">/&gt;</span>
+             <span style="color:#f92672">&lt;property</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;hostname-verification-policy&#34;</span> <span style="color:#a6e22e">value=</span><span style="color:#e6db74">&#34;ANY&#34;</span><span style="color:#f92672">/&gt;</span>
+             <span style="color:#f92672">&lt;property</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;disabled&#34;</span> <span style="color:#a6e22e">value=</span><span style="color:#e6db74">&#34;false&#34;</span><span style="color:#f92672">/&gt;</span>
+         <span style="color:#f92672">&lt;/properties&gt;</span>
+     <span style="color:#f92672">&lt;/provider&gt;</span>
+ <span style="color:#f92672">&lt;/spi&gt;</span>
 </code></pre></div><p>After amending the standalone.xml file, restart JBOSS for the changes to pickup.</p>
 <h3 id="enabling-sslhttps-for-the-keycloak-server-inbound">Enabling SSL/HTTPS for the Keycloak Server (Inbound)</h3>
 <p>The Shell below creates a java trust store with a self-signed certificate.</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">$ cd /opt/rh-sso-7.3
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">$ cd /opt/rh-sso-7.3
 $ keytool -genkey -alias localhost -keyalg RSA -keystore keycloak.jks -validity 10950
 Enter keystore password:  test77
 Re-enter new password: test77
@@ -2345,9 +2345,9 @@ $ keytool -importkeystore -srckeystore keycloak.jks -destkeystore keycloak.jks -
 $ ./bin/kcadm.sh config truststore --trustpass test77 /opt/rh-sso-7.3/keycloak.jks
 $ cp keycloak.jks standalone/configuration
 </code></pre></div><p>The below shell will invoke the JBOSS-CLI, where we execute some JBOSS server configuration to add the keystore information and enable extra logging.</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">$ cd bin
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">$ cd bin
 $ ./jboss-cli.sh
-</code></pre></div><div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">/connect
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">/connect
 
 /core-service=management/security-realm=UndertowRealm:add()
 
@@ -2394,17 +2394,17 @@ Or alternatively the same metadata is available from the URL:</p>
 <h3 id="adding-relying-party-trusts">Adding Relying Party Trusts</h3>
 <p>The following Powershell will import the metadata for the configuration details of the SSO server either from the metadata XML file previously downloaded or directly from the URL.</p>
 <p>From a File:</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Add-AdfsRelyingPartyTrust -Name &#34;SSO&#34; -MetadataFile &#34;c:\metadatafile.xml&#34; -AccessControlPolicyName &#34;Permit Everyone&#34;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Add-AdfsRelyingPartyTrust -Name &#34;SSO&#34; -MetadataFile &#34;c:\metadatafile.xml&#34; -AccessControlPolicyName &#34;Permit Everyone&#34;
 </code></pre></div><p>Specify the metadata xml file as it allows the xml file to be modified, e.g. if the output is HTTP endpoints and not HTTPS.</p>
 <p>From a URL:</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Add-AdfsRelyingPartyTrust -Name &#34;SSO&#34; -MetadataURL &#34;https://&lt;HOST&gt;:&lt;PORT&gt;/auth/realms/&lt;REALM_NAME&gt;/broker/saml/endpoint/descriptor&#34; -AccessControlPolicyName &#34;Permit Everyone&#34;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Add-AdfsRelyingPartyTrust -Name &#34;SSO&#34; -MetadataURL &#34;https://&lt;HOST&gt;:&lt;PORT&gt;/auth/realms/&lt;REALM_NAME&gt;/broker/saml/endpoint/descriptor&#34; -AccessControlPolicyName &#34;Permit Everyone&#34;
 </code></pre></div><p>Provide the URL for SSO’s metadata like we mentiomed earlier:</p>
 <blockquote>
 <p><code>https://&lt;HOST&gt;:8443/auth/realms/&lt;REALM_NAME&gt;/broker/saml/endpoint/descriptor</code></p>
 </blockquote>
 <p>Adding Relying Party Trusts Mapping Rules
 Create a text document e.g. &ldquo;C:\rules.txt&quot;and place the following inside it:</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">@RuleTemplate = &#34;MapClaims&#34;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">@RuleTemplate = &#34;MapClaims&#34;
 @RuleName = &#34;Name ID&#34;
 c:[Type == &#34;http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsaccountname&#34;]
  =&gt; issue(Type = &#34;http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier&#34;, Issuer = c.Issuer, OriginalIssuer = c.OriginalIssuer, Value = c.Value, ValueType = c.ValueType, Properties[&#34;http://schemas.xmlsoap.org/ws/2005/05/identity/claimproperties/format&#34;] = &#34;urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress&#34;);
@@ -2414,9 +2414,9 @@ c:[Type == &#34;http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsa
 c:[Type == &#34;http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsaccountname&#34;, Issuer == &#34;AD AUTHORITY&#34;]
  =&gt; issue(store = &#34;Active Directory&#34;, types = (&#34;http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress&#34;, &#34;http://schemas.microsoft.com/2012/12/certificatecontext/field/subjectname&#34;), query = &#34;;mail,sAMAccountName;{0}&#34;, param = c.Value);
 </code></pre></div><p>Then run the below powershell command to add the rules</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Set-AdfsRelyingPartyTrust -TargetName &#34;Destination Relying Party Trust&#34; -IssuanceTransformRulesFile &#34;C:\rules.txt&#34;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; Set-AdfsRelyingPartyTrust -TargetName &#34;Destination Relying Party Trust&#34; -IssuanceTransformRulesFile &#34;C:\rules.txt&#34;
 </code></pre></div><p>If you would like to add additional rules with the ADFS Management GUI, you can then export the rules again to text with:</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; (Get-AdfsRelyingPartyTrust -Name &#34;saml&#34;).IssuanceTransformRules | Out-File &#34;C:\rules.txt&#34;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">PS&gt; (Get-AdfsRelyingPartyTrust -Name &#34;saml&#34;).IssuanceTransformRules | Out-File &#34;C:\rules.txt&#34;
 </code></pre></div><h3 id="example-of-adding-rules-via-gui-optional">Example of adding rules via GUI (optional)</h3>
 <p>The following is not needed if the previous powershell was run. However it does illustrate how to add relying party trust rules for mapping which is in fact easier initially to do via the GUI if you are unsure on exactly the mapping configuration. The two examples below show how the previous configuration was doen for mapping user ID and user attributes.</p>
 <h3 id="rule-for-mapping-user-id-gui">Rule for Mapping user ID (GUI)</h3>
@@ -2489,58 +2489,58 @@ Select ‘Add Rule’</li>
 <p><img src="/images/sso9.png#center" alt="SSO ADFS Integration"></p>
 <p>Once a user has successfully logged on you can see a response like the below that will be found in the JBOSS server logs. Assuming that you have installed RH-SSO inline with the description above then the logs will be found at $JBOSS_HOME/standalone/logs/server.log</p>
 <p>You may have to turn on the debug in order to see these messages. This is typically done via the following commands:</p>
-<div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">$JBOSS_HOME/bin/jboss-cli.sh --connect
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">$JBOSS_HOME/bin/jboss-cli.sh --connect
 /subsystem=logging/logger=org.keycloak/:add(category=org.keycloak,level=TRACE)
-</code></pre></div><div class="highlight"><pre style="background-color:#eed;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-xml" data-lang="xml"><span style="color:#1e889b">&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;</span>samlp:Response ID=&#34;_b37dfe49-822b-46ec-8919-869ebfa63b2d&#34; Version=&#34;2.0&#34; IssueInstant=&#34;2020-02-20T12:26:54.794Z&#34; Destination=&#34;https://192.168.56.102:8443/auth/realms/demo/broker/saml/endpoint&#34; Consent=&#34;urn:oasis:names:tc:SAML:2.0:consent:unspecified&#34; InResponseTo=&#34;ID_dd02e34f-40b2-4a2a-b972-87be50a8a9a7&#34; xmlns:samlp=&#34;urn:oasis:names:tc:SAML:2.0:protocol&#34;&gt;
-<span style="color:#8b008b;font-weight:bold">&lt;Issuer</span> <span style="color:#658b00">xmlns=</span><span style="color:#cd5555">&#34;urn:oasis:names:tc:SAML:2.0:assertion&#34;</span><span style="color:#8b008b;font-weight:bold">&gt;</span>http://ad01.contoso.com/adfs/services/trust<span style="color:#8b008b;font-weight:bold">&lt;/Issuer&gt;</span>
-<span style="color:#8b008b;font-weight:bold">&lt;samlp:Status&gt;</span>
-  <span style="color:#8b008b;font-weight:bold">&lt;samlp:StatusCode</span> <span style="color:#658b00">Value=</span><span style="color:#cd5555">&#34;urn:oasis:names:tc:SAML:2.0:status:Success&#34;</span> <span style="color:#8b008b;font-weight:bold">/&gt;</span>
-<span style="color:#8b008b;font-weight:bold">&lt;/samlp:Status&gt;</span>
-<span style="color:#8b008b;font-weight:bold">&lt;Assertion</span> <span style="color:#658b00">ID=</span><span style="color:#cd5555">&#34;_8f000dc3-31cf-48c0-80d9-bcccaa409e2e&#34;</span> <span style="color:#658b00">IssueInstant=</span><span style="color:#cd5555">&#34;2020-02-20T12:26:54.764Z&#34;</span> <span style="color:#658b00">Version=</span><span style="color:#cd5555">&#34;2.0&#34;</span> <span style="color:#658b00">xmlns=</span><span style="color:#cd5555">&#34;urn:oasis:names:tc:SAML:2.0:assertion&#34;</span><span style="color:#8b008b;font-weight:bold">&gt;</span>
-  <span style="color:#8b008b;font-weight:bold">&lt;Issuer&gt;</span>http://ad01.contoso.com/adfs/services/trust<span style="color:#8b008b;font-weight:bold">&lt;/Issuer&gt;</span>
-  <span style="color:#8b008b;font-weight:bold">&lt;ds:Signature</span> <span style="color:#658b00">xmlns:ds=</span><span style="color:#cd5555">&#34;http://www.w3.org/2000/09/xmldsig#&#34;</span><span style="color:#8b008b;font-weight:bold">&gt;</span>
-    <span style="color:#8b008b;font-weight:bold">&lt;ds:SignedInfo&gt;</span>
-      <span style="color:#8b008b;font-weight:bold">&lt;ds:CanonicalizationMethod</span> <span style="color:#658b00">Algorithm=</span><span style="color:#cd5555">&#34;http://www.w3.org/2001/10/xml-exc-c14n#&#34;</span> <span style="color:#8b008b;font-weight:bold">/&gt;</span>
-      <span style="color:#8b008b;font-weight:bold">&lt;ds:SignatureMethod</span> <span style="color:#658b00">Algorithm=</span><span style="color:#cd5555">&#34;http://www.w3.org/2001/04/xmldsig-more#rsa-sha256&#34;</span> <span style="color:#8b008b;font-weight:bold">/&gt;</span>
-      <span style="color:#8b008b;font-weight:bold">&lt;ds:Reference</span> <span style="color:#658b00">URI=</span><span style="color:#cd5555">&#34;#_8f000dc3-31cf-48c0-80d9-bcccaa409e2e&#34;</span><span style="color:#8b008b;font-weight:bold">&gt;</span>
-        <span style="color:#8b008b;font-weight:bold">&lt;ds:Transforms&gt;</span>
-          <span style="color:#8b008b;font-weight:bold">&lt;ds:Transform</span> <span style="color:#658b00">Algorithm=</span><span style="color:#cd5555">&#34;http://www.w3.org/2000/09/xmldsig#enveloped-signature&#34;</span> <span style="color:#8b008b;font-weight:bold">/&gt;</span>
-          <span style="color:#8b008b;font-weight:bold">&lt;ds:Transform</span> <span style="color:#658b00">Algorithm=</span><span style="color:#cd5555">&#34;http://www.w3.org/2001/10/xml-exc-c14n#&#34;</span> <span style="color:#8b008b;font-weight:bold">/&gt;</span>
-        <span style="color:#8b008b;font-weight:bold">&lt;/ds:Transforms&gt;</span>
-        <span style="color:#8b008b;font-weight:bold">&lt;ds:DigestMethod</span> <span style="color:#658b00">Algorithm=</span><span style="color:#cd5555">&#34;http://www.w3.org/2001/04/xmlenc#sha256&#34;</span> <span style="color:#8b008b;font-weight:bold">/&gt;</span>
-        <span style="color:#8b008b;font-weight:bold">&lt;ds:DigestValue&gt;</span>VnPFSxcb/KOo+YS3Lf8h7UPgTWhlAt97RdkkFD7VyXw=<span style="color:#8b008b;font-weight:bold">&lt;/ds:DigestValue&gt;</span>
-      <span style="color:#8b008b;font-weight:bold">&lt;/ds:Reference&gt;</span>
-    <span style="color:#8b008b;font-weight:bold">&lt;/ds:SignedInfo&gt;</span>
-    <span style="color:#8b008b;font-weight:bold">&lt;ds:SignatureValue&gt;</span>5mX/hgPKocmMx7hxo1eB3/xtOOmrWjxXn3qhdI041B1w0tDl4a8p/FPmVHc85BxkXLfbPYbfbB7lAsYbTNMVPtl5IzF2vsTxVuJBRRtwko39PYbPGeVhbCQMeazxUMQEAcYtD5JL4slofNYmq6biH0iYbNYgvxlh7LMmHsg2Es1GjY9DvtidbGYrtNvUSysSuuaGznZbtFWWpbDOuNubJpGTEvSYO9H2AAqx9cY9376bBF6ui/deQ/4mTFK5OY3nvYdi4hs4s/fN4qvdqKm9JbuBjV3tuFZ8WEJrwFApD05yqJRA4bZkjyjU1Y0C/zGp4RaFE026Uv20wdr1gX7W/g==<span style="color:#8b008b;font-weight:bold">&lt;/ds:SignatureValue&gt;</span>
-    <span style="color:#8b008b;font-weight:bold">&lt;KeyInfo</span> <span style="color:#658b00">xmlns=</span><span style="color:#cd5555">&#34;http://www.w3.org/2000/09/xmldsig#&#34;</span><span style="color:#8b008b;font-weight:bold">&gt;</span>
-      <span style="color:#8b008b;font-weight:bold">&lt;ds:X509Data&gt;</span>
-        <span style="color:#8b008b;font-weight:bold">&lt;ds:X509Certificate&gt;</span>MIIC3DCCAcSgAwIBAgIQJjwM5Bqr44xDPLzkb1zUEDANBgkqhkiG9w0BAQsFADAqMSgwJgYDVQQDEx9BREZTIFNpZ25pbmcgLSBhZDAxLmNvbnRvc28uY29tMB4XDTIwMDIxOTEwNDQyOFoXDTIxMDIxODEwNDQyOFowKjEoMCYGA1UEAxMfQURGUyBTaWduaW5nIC0gYWQwMS5jb250b3NvLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAO6P4+vK085uyOqs+0++l4KAk6tF6x4RScYecCYwcaFg+VqaOI1dvrwaVMSLLi39ORUEVNIw+Ju5YbjCB3tVINliW+P1wnf7Y3k0QHEgXZTmJ19FbGjHySNDXSkd+4J242kiuYZfU1nQfCkCLCqXgSZwj5apnaV1cNgKxB9TE0cDl1FF3O1j2t7P+kTV+rEOZuIWy4UJfwGRQFBxTIB95pKJssY5vB/3MldXKOspdjXg6zvmpQ3Jjx50lbyxLGVlol/otPa7UAQtFzW1D7Bbl6V5GE06OSGcO9KI1dtKwKoiTC5B5FGXGAiYRBcLV7adzEANpVpwOTdzq6DSjFY8dC8CAwEAATANBgkqhkiG9w0BAQsFAAOCAQEAmFk1RNHAvj5VLzgBMVyA4NY3ruSuV9JMnPnmLabM/KXOiczWq+4sqLRCyB4gREm/gxkORqlAwrW0Rla3ZSpYRjvSIMmWL2bHZu52hrJMkxLQu1laNI1bRXalchcuWxkgaj2LMiT3sPogf6/Y8Ffizn6wyqOXyVLSJoFSEBHiuKoaKDlpz/rRd7bNDenIYyNr6mOA2rpAptG4EjSlAVX2YuholFF1kizdOmSCS+Y8k3/9fhgYYQ7hHZr5ObAOkjUucRO/OwZtghkUtMnrf+KCrLDsUTAwNCxbxtk1ACDjDfwRau9vq42YLqqAgAoitfdccnWOGdi9RmubHVAkXfSdlQ==<span style="color:#8b008b;font-weight:bold">&lt;/ds:X509Certificate&gt;</span>
-      <span style="color:#8b008b;font-weight:bold">&lt;/ds:X509Data&gt;</span>
-    <span style="color:#8b008b;font-weight:bold">&lt;/KeyInfo&gt;</span>
-  <span style="color:#8b008b;font-weight:bold">&lt;/ds:Signature&gt;</span>
-  <span style="color:#8b008b;font-weight:bold">&lt;Subject&gt;</span>
-    <span style="color:#8b008b;font-weight:bold">&lt;NameID</span> <span style="color:#658b00">Format=</span><span style="color:#cd5555">&#34;urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress&#34;</span><span style="color:#8b008b;font-weight:bold">&gt;</span>contoso\Administrator<span style="color:#8b008b;font-weight:bold">&lt;/NameID&gt;</span>
-    <span style="color:#8b008b;font-weight:bold">&lt;SubjectConfirmation</span> <span style="color:#658b00">Method=</span><span style="color:#cd5555">&#34;urn:oasis:names:tc:SAML:2.0:cm:bearer&#34;</span><span style="color:#8b008b;font-weight:bold">&gt;</span>
-      <span style="color:#8b008b;font-weight:bold">&lt;SubjectConfirmationData</span> <span style="color:#658b00">InResponseTo=</span><span style="color:#cd5555">&#34;ID_dd02e34f-40b2-4a2a-b972-87be50a8a9a7&#34;</span> <span style="color:#658b00">NotOnOrAfter=</span><span style="color:#cd5555">&#34;2020-02-20T12:31:54.801Z&#34;</span> <span style="color:#658b00">Recipient=</span><span style="color:#cd5555">&#34;https://192.168.56.102:8443/auth/realms/demo/broker/saml/endpoint&#34;</span> <span style="color:#8b008b;font-weight:bold">/&gt;</span>
-    <span style="color:#8b008b;font-weight:bold">&lt;/SubjectConfirmation&gt;</span>
-  <span style="color:#8b008b;font-weight:bold">&lt;/Subject&gt;</span>
-  <span style="color:#8b008b;font-weight:bold">&lt;Conditions</span> <span style="color:#658b00">NotBefore=</span><span style="color:#cd5555">&#34;2020-02-20T12:26:54.755Z&#34;</span> <span style="color:#658b00">NotOnOrAfter=</span><span style="color:#cd5555">&#34;2020-02-20T13:26:54.755Z&#34;</span><span style="color:#8b008b;font-weight:bold">&gt;</span>
-    <span style="color:#8b008b;font-weight:bold">&lt;AudienceRestriction&gt;</span>
-      <span style="color:#8b008b;font-weight:bold">&lt;Audience&gt;</span>https://192.168.56.102:8443/auth/realms/demo<span style="color:#8b008b;font-weight:bold">&lt;/Audience&gt;</span>
-    <span style="color:#8b008b;font-weight:bold">&lt;/AudienceRestriction&gt;</span>
-  <span style="color:#8b008b;font-weight:bold">&lt;/Conditions&gt;</span>
-  <span style="color:#8b008b;font-weight:bold">&lt;AttributeStatement&gt;</span>
-    <span style="color:#8b008b;font-weight:bold">&lt;Attribute</span> <span style="color:#658b00">Name=</span><span style="color:#cd5555">&#34;http://schemas.microsoft.com/2012/12/certificatecontext/field/subjectname&#34;</span><span style="color:#8b008b;font-weight:bold">&gt;</span>
-      <span style="color:#8b008b;font-weight:bold">&lt;AttributeValue&gt;</span>Administrator<span style="color:#8b008b;font-weight:bold">&lt;/AttributeValue&gt;</span>
-    <span style="color:#8b008b;font-weight:bold">&lt;/Attribute&gt;</span>
-  <span style="color:#8b008b;font-weight:bold">&lt;/AttributeStatement&gt;</span>
-  <span style="color:#8b008b;font-weight:bold">&lt;AuthnStatement</span> <span style="color:#658b00">AuthnInstant=</span><span style="color:#cd5555">&#34;2020-02-20T12:26:54.643Z&#34;</span> <span style="color:#658b00">SessionIndex=</span><span style="color:#cd5555">&#34;_8f000dc3-31cf-48c0-80d9-bcccaa409e2e&#34;</span><span style="color:#8b008b;font-weight:bold">&gt;</span>
-    <span style="color:#8b008b;font-weight:bold">&lt;AuthnContext&gt;</span>
-      <span style="color:#8b008b;font-weight:bold">&lt;AuthnContextClassRef&gt;</span>urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport<span style="color:#8b008b;font-weight:bold">&lt;/AuthnContextClassRef&gt;</span>
-    <span style="color:#8b008b;font-weight:bold">&lt;/AuthnContext&gt;</span>
-  <span style="color:#8b008b;font-weight:bold">&lt;/AuthnStatement&gt;</span>
-<span style="color:#8b008b;font-weight:bold">&lt;/Assertion&gt;</span>
-<span style="color:#8b008b;font-weight:bold">&lt;/samlp:Response&gt;</span>
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-xml" data-lang="xml"><span style="color:#75715e">&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;</span>samlp:Response ID=&#34;_b37dfe49-822b-46ec-8919-869ebfa63b2d&#34; Version=&#34;2.0&#34; IssueInstant=&#34;2020-02-20T12:26:54.794Z&#34; Destination=&#34;https://192.168.56.102:8443/auth/realms/demo/broker/saml/endpoint&#34; Consent=&#34;urn:oasis:names:tc:SAML:2.0:consent:unspecified&#34; InResponseTo=&#34;ID_dd02e34f-40b2-4a2a-b972-87be50a8a9a7&#34; xmlns:samlp=&#34;urn:oasis:names:tc:SAML:2.0:protocol&#34;&gt;
+<span style="color:#f92672">&lt;Issuer</span> <span style="color:#a6e22e">xmlns=</span><span style="color:#e6db74">&#34;urn:oasis:names:tc:SAML:2.0:assertion&#34;</span><span style="color:#f92672">&gt;</span>http://ad01.contoso.com/adfs/services/trust<span style="color:#f92672">&lt;/Issuer&gt;</span>
+<span style="color:#f92672">&lt;samlp:Status&gt;</span>
+  <span style="color:#f92672">&lt;samlp:StatusCode</span> <span style="color:#a6e22e">Value=</span><span style="color:#e6db74">&#34;urn:oasis:names:tc:SAML:2.0:status:Success&#34;</span> <span style="color:#f92672">/&gt;</span>
+<span style="color:#f92672">&lt;/samlp:Status&gt;</span>
+<span style="color:#f92672">&lt;Assertion</span> <span style="color:#a6e22e">ID=</span><span style="color:#e6db74">&#34;_8f000dc3-31cf-48c0-80d9-bcccaa409e2e&#34;</span> <span style="color:#a6e22e">IssueInstant=</span><span style="color:#e6db74">&#34;2020-02-20T12:26:54.764Z&#34;</span> <span style="color:#a6e22e">Version=</span><span style="color:#e6db74">&#34;2.0&#34;</span> <span style="color:#a6e22e">xmlns=</span><span style="color:#e6db74">&#34;urn:oasis:names:tc:SAML:2.0:assertion&#34;</span><span style="color:#f92672">&gt;</span>
+  <span style="color:#f92672">&lt;Issuer&gt;</span>http://ad01.contoso.com/adfs/services/trust<span style="color:#f92672">&lt;/Issuer&gt;</span>
+  <span style="color:#f92672">&lt;ds:Signature</span> <span style="color:#a6e22e">xmlns:ds=</span><span style="color:#e6db74">&#34;http://www.w3.org/2000/09/xmldsig#&#34;</span><span style="color:#f92672">&gt;</span>
+    <span style="color:#f92672">&lt;ds:SignedInfo&gt;</span>
+      <span style="color:#f92672">&lt;ds:CanonicalizationMethod</span> <span style="color:#a6e22e">Algorithm=</span><span style="color:#e6db74">&#34;http://www.w3.org/2001/10/xml-exc-c14n#&#34;</span> <span style="color:#f92672">/&gt;</span>
+      <span style="color:#f92672">&lt;ds:SignatureMethod</span> <span style="color:#a6e22e">Algorithm=</span><span style="color:#e6db74">&#34;http://www.w3.org/2001/04/xmldsig-more#rsa-sha256&#34;</span> <span style="color:#f92672">/&gt;</span>
+      <span style="color:#f92672">&lt;ds:Reference</span> <span style="color:#a6e22e">URI=</span><span style="color:#e6db74">&#34;#_8f000dc3-31cf-48c0-80d9-bcccaa409e2e&#34;</span><span style="color:#f92672">&gt;</span>
+        <span style="color:#f92672">&lt;ds:Transforms&gt;</span>
+          <span style="color:#f92672">&lt;ds:Transform</span> <span style="color:#a6e22e">Algorithm=</span><span style="color:#e6db74">&#34;http://www.w3.org/2000/09/xmldsig#enveloped-signature&#34;</span> <span style="color:#f92672">/&gt;</span>
+          <span style="color:#f92672">&lt;ds:Transform</span> <span style="color:#a6e22e">Algorithm=</span><span style="color:#e6db74">&#34;http://www.w3.org/2001/10/xml-exc-c14n#&#34;</span> <span style="color:#f92672">/&gt;</span>
+        <span style="color:#f92672">&lt;/ds:Transforms&gt;</span>
+        <span style="color:#f92672">&lt;ds:DigestMethod</span> <span style="color:#a6e22e">Algorithm=</span><span style="color:#e6db74">&#34;http://www.w3.org/2001/04/xmlenc#sha256&#34;</span> <span style="color:#f92672">/&gt;</span>
+        <span style="color:#f92672">&lt;ds:DigestValue&gt;</span>VnPFSxcb/KOo+YS3Lf8h7UPgTWhlAt97RdkkFD7VyXw=<span style="color:#f92672">&lt;/ds:DigestValue&gt;</span>
+      <span style="color:#f92672">&lt;/ds:Reference&gt;</span>
+    <span style="color:#f92672">&lt;/ds:SignedInfo&gt;</span>
+    <span style="color:#f92672">&lt;ds:SignatureValue&gt;</span>5mX/hgPKocmMx7hxo1eB3/xtOOmrWjxXn3qhdI041B1w0tDl4a8p/FPmVHc85BxkXLfbPYbfbB7lAsYbTNMVPtl5IzF2vsTxVuJBRRtwko39PYbPGeVhbCQMeazxUMQEAcYtD5JL4slofNYmq6biH0iYbNYgvxlh7LMmHsg2Es1GjY9DvtidbGYrtNvUSysSuuaGznZbtFWWpbDOuNubJpGTEvSYO9H2AAqx9cY9376bBF6ui/deQ/4mTFK5OY3nvYdi4hs4s/fN4qvdqKm9JbuBjV3tuFZ8WEJrwFApD05yqJRA4bZkjyjU1Y0C/zGp4RaFE026Uv20wdr1gX7W/g==<span style="color:#f92672">&lt;/ds:SignatureValue&gt;</span>
+    <span style="color:#f92672">&lt;KeyInfo</span> <span style="color:#a6e22e">xmlns=</span><span style="color:#e6db74">&#34;http://www.w3.org/2000/09/xmldsig#&#34;</span><span style="color:#f92672">&gt;</span>
+      <span style="color:#f92672">&lt;ds:X509Data&gt;</span>
+        <span style="color:#f92672">&lt;ds:X509Certificate&gt;</span>MIIC3DCCAcSgAwIBAgIQJjwM5Bqr44xDPLzkb1zUEDANBgkqhkiG9w0BAQsFADAqMSgwJgYDVQQDEx9BREZTIFNpZ25pbmcgLSBhZDAxLmNvbnRvc28uY29tMB4XDTIwMDIxOTEwNDQyOFoXDTIxMDIxODEwNDQyOFowKjEoMCYGA1UEAxMfQURGUyBTaWduaW5nIC0gYWQwMS5jb250b3NvLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAO6P4+vK085uyOqs+0++l4KAk6tF6x4RScYecCYwcaFg+VqaOI1dvrwaVMSLLi39ORUEVNIw+Ju5YbjCB3tVINliW+P1wnf7Y3k0QHEgXZTmJ19FbGjHySNDXSkd+4J242kiuYZfU1nQfCkCLCqXgSZwj5apnaV1cNgKxB9TE0cDl1FF3O1j2t7P+kTV+rEOZuIWy4UJfwGRQFBxTIB95pKJssY5vB/3MldXKOspdjXg6zvmpQ3Jjx50lbyxLGVlol/otPa7UAQtFzW1D7Bbl6V5GE06OSGcO9KI1dtKwKoiTC5B5FGXGAiYRBcLV7adzEANpVpwOTdzq6DSjFY8dC8CAwEAATANBgkqhkiG9w0BAQsFAAOCAQEAmFk1RNHAvj5VLzgBMVyA4NY3ruSuV9JMnPnmLabM/KXOiczWq+4sqLRCyB4gREm/gxkORqlAwrW0Rla3ZSpYRjvSIMmWL2bHZu52hrJMkxLQu1laNI1bRXalchcuWxkgaj2LMiT3sPogf6/Y8Ffizn6wyqOXyVLSJoFSEBHiuKoaKDlpz/rRd7bNDenIYyNr6mOA2rpAptG4EjSlAVX2YuholFF1kizdOmSCS+Y8k3/9fhgYYQ7hHZr5ObAOkjUucRO/OwZtghkUtMnrf+KCrLDsUTAwNCxbxtk1ACDjDfwRau9vq42YLqqAgAoitfdccnWOGdi9RmubHVAkXfSdlQ==<span style="color:#f92672">&lt;/ds:X509Certificate&gt;</span>
+      <span style="color:#f92672">&lt;/ds:X509Data&gt;</span>
+    <span style="color:#f92672">&lt;/KeyInfo&gt;</span>
+  <span style="color:#f92672">&lt;/ds:Signature&gt;</span>
+  <span style="color:#f92672">&lt;Subject&gt;</span>
+    <span style="color:#f92672">&lt;NameID</span> <span style="color:#a6e22e">Format=</span><span style="color:#e6db74">&#34;urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress&#34;</span><span style="color:#f92672">&gt;</span>contoso\Administrator<span style="color:#f92672">&lt;/NameID&gt;</span>
+    <span style="color:#f92672">&lt;SubjectConfirmation</span> <span style="color:#a6e22e">Method=</span><span style="color:#e6db74">&#34;urn:oasis:names:tc:SAML:2.0:cm:bearer&#34;</span><span style="color:#f92672">&gt;</span>
+      <span style="color:#f92672">&lt;SubjectConfirmationData</span> <span style="color:#a6e22e">InResponseTo=</span><span style="color:#e6db74">&#34;ID_dd02e34f-40b2-4a2a-b972-87be50a8a9a7&#34;</span> <span style="color:#a6e22e">NotOnOrAfter=</span><span style="color:#e6db74">&#34;2020-02-20T12:31:54.801Z&#34;</span> <span style="color:#a6e22e">Recipient=</span><span style="color:#e6db74">&#34;https://192.168.56.102:8443/auth/realms/demo/broker/saml/endpoint&#34;</span> <span style="color:#f92672">/&gt;</span>
+    <span style="color:#f92672">&lt;/SubjectConfirmation&gt;</span>
+  <span style="color:#f92672">&lt;/Subject&gt;</span>
+  <span style="color:#f92672">&lt;Conditions</span> <span style="color:#a6e22e">NotBefore=</span><span style="color:#e6db74">&#34;2020-02-20T12:26:54.755Z&#34;</span> <span style="color:#a6e22e">NotOnOrAfter=</span><span style="color:#e6db74">&#34;2020-02-20T13:26:54.755Z&#34;</span><span style="color:#f92672">&gt;</span>
+    <span style="color:#f92672">&lt;AudienceRestriction&gt;</span>
+      <span style="color:#f92672">&lt;Audience&gt;</span>https://192.168.56.102:8443/auth/realms/demo<span style="color:#f92672">&lt;/Audience&gt;</span>
+    <span style="color:#f92672">&lt;/AudienceRestriction&gt;</span>
+  <span style="color:#f92672">&lt;/Conditions&gt;</span>
+  <span style="color:#f92672">&lt;AttributeStatement&gt;</span>
+    <span style="color:#f92672">&lt;Attribute</span> <span style="color:#a6e22e">Name=</span><span style="color:#e6db74">&#34;http://schemas.microsoft.com/2012/12/certificatecontext/field/subjectname&#34;</span><span style="color:#f92672">&gt;</span>
+      <span style="color:#f92672">&lt;AttributeValue&gt;</span>Administrator<span style="color:#f92672">&lt;/AttributeValue&gt;</span>
+    <span style="color:#f92672">&lt;/Attribute&gt;</span>
+  <span style="color:#f92672">&lt;/AttributeStatement&gt;</span>
+  <span style="color:#f92672">&lt;AuthnStatement</span> <span style="color:#a6e22e">AuthnInstant=</span><span style="color:#e6db74">&#34;2020-02-20T12:26:54.643Z&#34;</span> <span style="color:#a6e22e">SessionIndex=</span><span style="color:#e6db74">&#34;_8f000dc3-31cf-48c0-80d9-bcccaa409e2e&#34;</span><span style="color:#f92672">&gt;</span>
+    <span style="color:#f92672">&lt;AuthnContext&gt;</span>
+      <span style="color:#f92672">&lt;AuthnContextClassRef&gt;</span>urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport<span style="color:#f92672">&lt;/AuthnContextClassRef&gt;</span>
+    <span style="color:#f92672">&lt;/AuthnContext&gt;</span>
+  <span style="color:#f92672">&lt;/AuthnStatement&gt;</span>
+<span style="color:#f92672">&lt;/Assertion&gt;</span>
+<span style="color:#f92672">&lt;/samlp:Response&gt;</span>
 </code></pre></div><p>Congratulations. You have successfully setup SSO integration with ADFS.</p>
 
                     
