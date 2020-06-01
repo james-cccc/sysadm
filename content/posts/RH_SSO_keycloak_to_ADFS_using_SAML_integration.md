@@ -1,10 +1,10 @@
 ---
 date: 2020-04-11T18:00:00
-description: "Learn how to implement a basic authentication combination configuration in your organization by identity brokering ADFS authentication with Red Hat Single Sign On (Keycloak) using SAML"
+description: "Implement a basic authentication combination configuration by identity brokering ADFS with RedHat SSO (Keycloak)"
 #featured_image: "/images/keycloak_logo.png"
 tags: ["ADFS","SAML"]
 # categories: "POC"
-title: "RH-SSO (Keycloak) to ADFS Integration using SAML"
+title: "Integrating RH-SSO (Keycloak) to ADFS"
 comment : false
 ---
 
