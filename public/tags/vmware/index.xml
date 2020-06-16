@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>VMware on sysadm.life</title>
+    <link>https://sysadm.life/tags/vmware/</link>
+    <description>Recent content in VMware on sysadm.life</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 14 Jun 2020 18:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="https://sysadm.life/tags/vmware/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Installing Openshift 4 on ESXi using Packet</title>
+      <link>https://sysadm.life/posts/openshift_static_ip_disconnected_esxi_install/</link>
+      <pubDate>Sun, 14 Jun 2020 18:00:00 +0000</pubDate>
+      
+      <guid>https://sysadm.life/posts/openshift_static_ip_disconnected_esxi_install/</guid>
+      <description>This article aims to present the steps required to create the minimum necessary infrastructure to install and gain familiarity with Openshift 4.4 on VMware Esxi (hosted on packet.com) using static IP addresses in a disconnected environment&amp;hellip; so a bit more than the standard run of the mill install!
+So why did I choose this setup? Well, I chose to use Packet as they provide easily provisionable bare mental in the cloud that is reasonably priced and I&amp;rsquo;m hoping that if someone wanted to replicate this setup they could easily do so following the below steps.</description>
+    </item>
+    
+  </channel>
+</rss>

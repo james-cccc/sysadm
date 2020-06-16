@@ -3,6 +3,36 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://sysadm.life/posts/openshift_static_ip_disconnected_esxi_install/</loc>
+    <lastmod>2020-06-14T18:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://sysadm.life/tags/openshift/</loc>
+    <lastmod>2020-06-14T18:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://sysadm.life/posts/</loc>
+    <lastmod>2020-06-14T18:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://sysadm.life/</loc>
+    <lastmod>2020-06-14T18:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://sysadm.life/tags/</loc>
+    <lastmod>2020-06-14T18:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://sysadm.life/tags/vmware/</loc>
+    <lastmod>2020-06-14T18:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://sysadm.life/tags/adfs/</loc>
     <lastmod>2020-04-11T18:00:00+00:00</lastmod>
   </url>
@@ -13,22 +43,7 @@
   </url>
   
   <url>
-    <loc>https://sysadm.life/posts/</loc>
-    <lastmod>2020-04-11T18:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://sysadm.life/tags/saml/</loc>
-    <lastmod>2020-04-11T18:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://sysadm.life/</loc>
-    <lastmod>2020-04-11T18:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://sysadm.life/tags/</loc>
     <lastmod>2020-04-11T18:00:00+00:00</lastmod>
   </url>
   
@@ -45,6 +60,10 @@
   <url>
     <loc>https://sysadm.life/tags/solaris/</loc>
     <lastmod>2018-12-18T18:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://sysadm.life/about/</loc>
   </url>
   
   <url>

@@ -30,10 +30,10 @@ theme = "diary"
     tabWidth = 4
 
 [params]
-subtitle = "The escapades of a cloud infrastructure consultant"
+subtitle = "Adventures of a consultant"
 enableGitalk = true
 # enableAutoDarkMode = true
-enableReadingTime = true
+# enableReadingTime = true
 
 [params.gitalk]
   owner = "user"
@@ -58,3 +58,8 @@ weight = 3
 url = "/posts"
 name = "Archive"
 weight = 1
+
+[[menu.main]]
+url = "/about"
+name = "About"
+weight = 3

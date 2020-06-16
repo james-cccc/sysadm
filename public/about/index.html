@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html><head>
-	<meta name="generator" content="Hugo 0.71.0" />
-<title>sysadm.life</title>
+<title>About</title>
 
 <meta charset="utf-8">
 <meta name="X-UA-Compatible" content="IE=edge">
@@ -42,13 +41,27 @@
 
 
 
-<style>
-  .toc{
-    display: none !important;
+<script src="https://sysadm.life/js/toc.js"></script>
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script src="/vendor/js/md5.min.js"></script>
+<script>
+  var gitalk = new Gitalk({
+  clientID: 'your client id',
+  clientSecret: 'your client secret',
+  repo: 'repo name',
+  owner: 'user',
+  admin: ['user'],
+  id: md5(location.pathname),
+  distractionFreeMode: 'false'
+  });
+  window.onload = function () {
+        gitalk.render('gitalk-container')
   }
-</style>
-
-
+</script>
 
 
 
@@ -59,7 +72,7 @@
 <body>
     	<div id="app"><div ref="sideContainer" class="side-container">
     
-    <a class="a-block nav-head active" href="https://sysadm.life">
+    <a class="a-block nav-head false" href="https://sysadm.life">
     
         <div class="nav-title">
             sysadm.life
@@ -87,9 +100,11 @@
             
             
             
+                
             
             
-            <a class="a-block nav-link-item false" href="/about">
+            
+            <a class="a-block nav-link-item active" href="/about">
                 About
             </a>
             
@@ -115,6 +130,11 @@
 </div><div ref="extraContainer" class="extra-container">
     
     
+    <div class="toc animated-visibility" :class="{ invisible: scrollY <= 140 }">
+
+
+</div>
+    
     <div class="pagination">
         <a id="globalBackToTop" class="pagination-action animated-visibility" href="#top" :class="{ invisible: scrollY == 0 }">
             <i class="material-icons pagination-action-icon">
@@ -130,8 +150,6 @@
                 brightness_7
             </i>
         </a>
-        
-        
         
         
     </div>
@@ -155,9 +173,11 @@
                 
                 
                 
+                    
                 
                 
-                <a class="a-block drawer-menu-item false" href="/about">
+                
+                <a class="a-block drawer-menu-item active" href="/about">
                     About
                 </a>
                 
@@ -172,6 +192,11 @@
                 </a>
                 
             
+            
+            <div class="toc">
+
+
+</div>
             
         </div>
     </div>
@@ -213,104 +238,55 @@
     </a>
 </div>
             <div id="content">
-
 <div ref="streamContainer" class="stream-container">
-    <div class="post-list-container post-list-container-no-background">
-        
+    <div class="post-list-container post-list-container-shadow">
+        <div class="post">
             
-            <a href="https://sysadm.life/posts/openshift_static_ip_disconnected_esxi_install/" class="a-block">
-                <div class="post-item-wrapper">
-                    <div class="post-item post-item-no-divider">
-                        <div class="post-item-info-wrapper">
-                            <div class="post-item-title">
-                                Installing Openshift 4 on ESXi using Packet
-                            </div>
-                            <div class="post-item-summary">
-                                Perform a disconnected Openshift 4 UPI install on ESXi hosted on Packet using static IPs
-                            </div>
-                            <div class="post-item-meta">
-    Sun, 14 Jun 2020
-    &emsp;
-    
-    
-    
-    &emsp;
-    
-</div>
+            
+            
 
-                        </div>
+            <div class="post-head-wrapper-text-only"
+                
+            >
+                <div class="post-title">
+                    About
+                    
+                    <div class="post-meta">
+                        
+
+                        
+
                         
                         
                     </div>
                 </div>
-            
-        
-            
-            <a href="https://sysadm.life/posts/rh_sso_keycloak_to_adfs_using_saml_integration/" class="a-block">
-                <div class="post-item-wrapper">
-                    <div class="post-item post-item-no-divider">
-                        <div class="post-item-info-wrapper">
-                            <div class="post-item-title">
-                                Integrating RH-SSO (Keycloak) to ADFS
-                            </div>
-                            <div class="post-item-summary">
-                                Implement a basic authentication combination configuration by identity brokering ADFS with RedHat SSO (Keycloak)
-                            </div>
-                            <div class="post-item-meta">
-    Sat, 11 Apr 2020
-    &emsp;
-    
-    
-    
-    &emsp;
-    
-</div>
+            </div>
 
-                        </div>
-                        
-                        
-                    </div>
+            <div class="post-body-wrapper">
+                <div class="post-body">
+                    <p>The main reason I have put this site together is to better understand the things I do by forcing myself to document things better. I&rsquo;m hoping these such things may also be useful to other people.. such as you&hellip; the reader of my blog!</p>
+<p>This site is very much still in its infancy. I do plan to add things such as comment sections and a way in which you could contact me&hellip; but for now, it is what it is.</p>
+<p>This site was created with <a href="https://gohugo.io/">Hugo</a> using the theme <a href="https://github.com/amazingrise/hugo-theme-diary">Diary</a> by <a href="https://amazingrise.net">Rise</a> ported from <a href="https://mak1t0.cc/">Makitos</a> Hexo theme <a href="https://github.com/SumiMakito/hexo-theme-journal/">Journal</a>.</p>
+
+                    
                 </div>
-            
-        
-            
-            <a href="https://sysadm.life/posts/porting_golang_to_sparc/" class="a-block">
-                <div class="post-item-wrapper">
-                    <div class="post-item post-item-no-divider">
-                        <div class="post-item-info-wrapper">
-                            <div class="post-item-title">
-                                Porting Go to SPARC Solaris
-                            </div>
-                            <div class="post-item-summary">
-                                Learn how to compile and port Go for SPARC Solaris 
-                            </div>
-                            <div class="post-item-meta">
-    Tue, 18 Dec 2018
-    &emsp;
-    
-    
-    
-    &emsp;
-    
-</div>
-
-                        </div>
-                        
-                        
-                    </div>
-                </div>
-            
-        
-            
-        
-        </a>
-    </div>
-</div>
-
             </div>
 
 
-<div id="single-column-footer"></div>
+
+
+            <div class="post-comment-wrapper">
+                
+                <p style="opacity: 0.6" align="center">
+                    <small> </small>
+                </p>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+            </div><div id="single-column-footer"></div>
             </div>
     <script>
 let app;

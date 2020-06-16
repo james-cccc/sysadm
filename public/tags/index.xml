@@ -6,10 +6,28 @@
     <description>Recent content in Tags on sysadm.life</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 11 Apr 2020 18:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 14 Jun 2020 18:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://sysadm.life/tags/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Openshift</title>
+      <link>https://sysadm.life/tags/openshift/</link>
+      <pubDate>Sun, 14 Jun 2020 18:00:00 +0000</pubDate>
+      
+      <guid>https://sysadm.life/tags/openshift/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>VMware</title>
+      <link>https://sysadm.life/tags/vmware/</link>
+      <pubDate>Sun, 14 Jun 2020 18:00:00 +0000</pubDate>
+      
+      <guid>https://sysadm.life/tags/vmware/</guid>
+      <description></description>
+    </item>
     
     <item>
       <title>ADFS</title>

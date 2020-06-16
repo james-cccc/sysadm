@@ -14,7 +14,7 @@ This article aims to present the steps required to create the minimum necessary 
 
 Most businesses usually have a large Windows estate and therefore use Active Directory (AD) as it provides a single source of user management in the organisation.  Many organizations often incorporate additional authentication programs and protocols in tandem with AD, including RH-SSO for example.
 
-This is not a reference architecture, nor does it illustrate the best-practices for the technologies shown. To achieve a more production style implementation, this article showcases a high-level combination of the official Microsoft ADFS documentation and the RedHat SSO documentation.
+This is not a reference architecture, nor does it illustrate the best-practices for the technologies shown. To achieve a more production style implementation look towards the official Microsoft ADFS documentation and the RedHat SSO documentation.
 
 The goal of this article is to simply illustrate the bare minimum configurations required to become familiar with the capabilities of the products, an example of an integration method, and how that integration can be validated and tested. At the end of the article, the following will have configured:
 

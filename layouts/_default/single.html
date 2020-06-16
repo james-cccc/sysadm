@@ -66,38 +66,18 @@
                     {{.Content}}
                     {{ if not .Lastmod.IsZero }}
                     <HR width="100%" id="EOF">
-                    <p style="color:#777;">Last modified on {{ .Page.Lastmod.Format "2006-01-02" }}</p>
+                    <p style="color:#777;">Last modified on {{ .Page.Lastmod.Format "02-01-2006" }}</p>
                     {{ end }}
                 </div>
             </div>
 
 
-            <nav class="post-pagination">
 
-                {{if .Next}}
-                <a class="newer-posts" href="{{.Next.Permalink}}">
-                    Next<br>{{.Next.Title}}
-                </a>
-                {{else}}
-                <a class="newer-posts">
-                    Next<br>No newer posts.
-                </a>
-                {{end}}
 
-                {{if .Prev}}
-                <a class="older-posts" href="{{.Prev.Permalink}}">
-                    Previous<br>{{.Prev.Title}}
-                </a>
-                {{else}}
-                <a class="older-posts">
-                    Previous<br>No older posts.
-                </a>
-                {{end}}
-            </nav>
             <div class="post-comment-wrapper">
                 {{ if eq .Params.comment false }}
                 <p style="opacity: 0.6" align="center">
-                    <small>Comments Disabled.</small>
+                    <small> </small>
                 </p>
                 {{ else }}
                 {{- partial "comment.html" . -}}
