@@ -6,10 +6,19 @@
     <description>Recent content in Openshift on sysadm.life</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 14 Jun 2020 18:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 22 Jun 2020 18:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://sysadm.life/tags/openshift/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Modifying Openshifts CoreOS ignition files</title>
+      <link>https://sysadm.life/posts/openshift_static_ip_dhcpd/</link>
+      <pubDate>Mon, 22 Jun 2020 18:00:00 +0000</pubDate>
+      
+      <guid>https://sysadm.life/posts/openshift_static_ip_dhcpd/</guid>
+      <description>This article was put together to help assist performing Openshift 4 deployments on VMWare ESXi where static IPs are required but where DHCP is available and is allowed to give out temporary addresses. Doing it this way as (opposed to my last article where DHCP was not used) allows us to use the ova templates and will not require the creation of any separate boot isos. This is possible as enabling DHCP will allow the machines that have been created with the just the OVAs to boot first using a random DHCP given IP.</description>
+    </item>
     
     <item>
       <title>Installing Openshift 4 on ESXi using Packet</title>
@@ -17,8 +26,8 @@
       <pubDate>Sun, 14 Jun 2020 18:00:00 +0000</pubDate>
       
       <guid>https://sysadm.life/posts/openshift_static_ip_disconnected_esxi_install/</guid>
-      <description>This article aims to present the steps required to create the minimum necessary infrastructure to install and gain familiarity with Openshift 4.4 on VMware Esxi (hosted on packet.com) using static IP addresses in a disconnected environment&amp;hellip; so a bit more than the standard run of the mill install!
-So why did I choose this setup? Well, I chose to use Packet as they provide easily provisionable bare mental in the cloud that is reasonably priced and I&amp;rsquo;m hoping that if someone wanted to replicate this setup they could easily do so following the below steps.</description>
+      <description>This article aims to present the steps required to create the minimum necessary infrastructure to install and gain familiarity with Openshift 4.4 on VMware ESXi (hosted on packet.com) using static IP addresses in a disconnected environment&amp;hellip; so a bit more than the standard run of the mill install!
+So why did I choose this setup? Well, I chose to use Packet as they provide easily provisionable bare metal in the cloud that is reasonably priced and I&amp;rsquo;m hoping that if someone wanted to replicate this setup they could easily do so following the below steps.</description>
     </item>
     
   </channel>

@@ -8,9 +8,9 @@ title: "Installing Openshift 4 on ESXi using Packet"
 comment : false
 ---
 
-This article aims to present the steps required to create the minimum necessary infrastructure to install and gain familiarity with Openshift 4.4 on VMware Esxi (hosted on packet.com) using static IP addresses in a disconnected environment... so a bit more than the standard run of the mill install!
+This article aims to present the steps required to create the minimum necessary infrastructure to install and gain familiarity with Openshift 4.4 on VMware ESXi (hosted on packet.com) using static IP addresses in a disconnected environment... so a bit more than the standard run of the mill install!
 
-So why did I choose this setup? Well, I chose to use Packet as they provide easily provisionable bare mental in the cloud that is reasonably priced and I'm hoping that if someone wanted to replicate this setup they could easily do so following the below steps. This activity may potentially be a decent exercise to become somewhat familiar and comfortable performing a UPI (that's User Provisioned Infrastructure) installation of Opeshift. I additionally chose to do a disconnected installation using static IPs to add to the fun and give you the reader a wider view on the installation process (plus I have a gig coming up where I'm about to do just that... so there is also that reason)!
+So why did I choose this setup? Well, I chose to use Packet as they provide easily provisionable bare metal in the cloud that is reasonably priced and I'm hoping that if someone wanted to replicate this setup they could easily do so following the below steps. This activity may potentially be a decent exercise to become somewhat familiar and comfortable performing a UPI (that's User Provisioned Infrastructure) installation of Openshift. I additionally chose to do a disconnected installation using static IPs to add to the fun and give you the reader a wider view on the installation process (plus I have a gig coming up where I'm about to do just that... so there is also that reason)!
 
 For a bit of background, I'm very much new to Openshift myself. Previous to starting this I did a couple of very boring AWS IPI (installer provisioned infrastructure) installations... which were very much 'click button' then make a brew whilst you wait for it to come up. That was nice, but I didn't really learn a lot. I then performed a UPI install on Openstack. So really, this is my second proper UPI install. Hopefully, the below ramblings will be useful to others in the same position as me.
 
@@ -22,9 +22,9 @@ https://www.packet.com/resources/guides/esxi/
 
 This article will cover the below steps in order to build an Openshift cluster from nothing:
 
-1. Provsion ESXi
+1. Provision ESXi
 2. Create a Bastion VM
-3. Setup a container reistry
+3. Setup a container registry
 4. Setup an Apache webserver
 5. Setup DNS
 6. Setup HAProxy
@@ -35,13 +35,13 @@ This article will cover the below steps in order to build an Openshift cluster f
 
 # Packet Preamble
 
-In total it took me 4 days to get this process together and get it working. I was provisioning a new server each day starting fresh and then throwing it away at the end of the day. I estimate that with the below information someone could run through this process in about a day. The total cost I incurred was $19.93, and I actually found a voucher 'nixos' for $25 Packet credit, so effecively it didn't cost me anything! I initially used the 'c1.small.x86' instances at $0.40 per hour to understand how packet and Esxi work, I then used the 'c2.medium.x86' instances at $1.00 per hour to perform the actual Openshift installation. You may think that the 'c2.medium.x86' instance is a bit lacking for an Openshift install with its measly 64GB of RAM.. technically it is, however you can get away overcommitting the VM guest machines memory, at least for the installation process anyway. Here was my useage for the week:
+In total it took me 4 days to get this process together and get it working. I was provisioning a new server each day starting fresh and then throwing it away at the end of the day. I estimate that with the below information someone could run through this process in about a day. The total cost I incurred was $19.93, and I actually found a voucher 'nixos' for $25 Packet credit, so effectively it didn't cost me anything! I initially used the 'c1.small.x86' instances at $0.40 per hour to understand how packet and Esxi work, I then used the 'c2.medium.x86' instances at $1.00 per hour to perform the actual Openshift installation. You may think that the 'c2.medium.x86' instance is a bit lacking for an Openshift install with its measly 64GB of RAM.. technically it is, however you can get away overcommitting the VM guest machines memory, at least for the installation process anyway. Here was my usage for the week:
 
 ![Shiny new server](/images/finished14.png#center)
 
 ### Provision ESXi
 
-Although not mandatory, I suggest to add your shh public key to your packet account before provisioning any server. Choose a suitable instance such as the c2.medium.x86. Set it's OS to be VMware ESXi 6.5. In the optional settings select Configure IPs and select the /28 subnet in the Private IPv4 section. The provisiong process takes 5 minutes or so, once it has completed you can click the instance name in your list of servers to see its details.
+Although not mandatory, I suggest adding your ssh public key to your packet account before provisioning any server. Choose a suitable instance such as the c2.medium.x86. Set it's OS to be VMware ESXi 6.5. In the optional settings select Configure IPs and select the /28 subnet in the Private IPv4 section. The provisioning process takes 5 minutes or so, once it has completed you can click the instance name in your list of servers to see its details.
 
 ![Shiny new server](/images/ocp_finished10.png#center)
 
@@ -59,7 +59,7 @@ Using this table we can define our free IP addresses. Before continuing I recomm
 
 #### Public
 
-For our public network we have a CIDR of /29, so its netmask is 255.255.255.248. Using the network address and CIDR we can work out the available IPs that we have. Therefore, with 139.178.72.16/29 we have 8 addresses in the range of: 139.178.72.16-139.178.72.23 (again as mentioned in the Packet ESXi guide 4 of these addresses are used). We will use the first avaible IP 139.178.72.19 to be our bastion VM.
+For our public network we have a CIDR of /29, so its netmask is 255.255.255.248. Using the network address and CIDR we can work out the available IPs that we have. Therefore, with 139.178.72.16/29 we have 8 addresses in the range of: 139.178.72.16-139.178.72.23 (again as mentioned in the Packet ESXi guide 4 of these addresses are used). We will use the first available IP 139.178.72.19 to be our bastion VM.
 
 | ADDRESS       | USEAGE    |
 |---------------|-----------|
@@ -117,9 +117,9 @@ wget http://mirror.as29550.net/mirror.centos.org/8.1.1911/isos/x86_64/CentOS-8.1
 
 ### Create the bastion VM
 
-Log into your ESXi web console which will be somthing like: https://139.178.72.18/ui/#/login
+Log into your ESXi web console which will be something like: https://139.178.72.18/ui/#/login
 
-Create VM a VM with 2 NICs, 4GB RAM, 40GB HDD, 2 VPCUs and mount the Centos8 iso to the DVD drive. Power the VM on and progress with the installation process using the console. When you get to the configuration screen the only important section is the Network one. Configure your hostname and domain to be somthing like 'packetfeathersbastion.jftest.com'.
+Create a VM with 2 NICs, 4GB RAM, 40GB HDD, 2 VPCUs and mount the Centos8 iso to the DVD drive. Power the VM on and progress with the installation process using the console. When you get to the configuration screen the only important section is the Network one. Configure your hostname and domain to be something like 'packetfeathersbastion.jftest.com'.
 
 Configure the first NIC manually to be your public network:
 
@@ -155,7 +155,8 @@ Check that the network configuration is okay and you can reach both public and p
 nmcli device status
 sudo nmcli device connect ens34
 nmcli connection show
-nmcli device modify ens34 autoconnect yes
+sudo nmcli device modify ens34 autoconnect yes
+sudo nmcli con mod ens34 connection.autoconnect yes
 ip addr show
 ping 10.80.158.2
 ping 139.178.72.18
@@ -164,8 +165,8 @@ cat /etc/sysconfig/network-scripts/*
 
 Install the necessary packages.
 ```text
-yum install epel-release -y
-yum install httpd httpd-tools podman-docker.noarch podman bind haproxy jq -y
+sudo yum install epel-release -y
+sudo yum install httpd httpd-tools podman-docker.noarch podman bind haproxy jq -y
 ```
 
 #### Stage Openshift installation media
@@ -267,7 +268,7 @@ The full auth file can also be generated with the below command, but be careful 
 podman login -u james -p fugazi77 --authfile /tmp/pullsecret_config.json packetfeathersbastion.jftest.com:5000
 ```
 
-Now you have a new auth file make an 'ugly' copy for later.
+Now you have a new auth file, make an 'ugly' copy for later.
 ```text
 cat /tmp/pull-secret.json | jq -c . /tmp/pull-secret.json >> /tmp/pull-secret-ugly.json
 ```
@@ -327,9 +328,9 @@ The Openshift install procedure here requires hosting the ignition files and the
 ```text
 sudo semanage port -a -t http_port_t -p tcp 8080
 sudo sed -i 's/Listen 80/Listen 10.80.158.5:8080/' /etc/httpd/conf/httpd.conf
-firewall-cmd --add-port=8080/tcp --permanent
-firewall-cmd --reload
-systemctl enable --now httpd
+sudo firewall-cmd --add-port=8080/tcp --permanent
+sudo firewall-cmd --reload
+sudo systemctl enable --now httpd
 ```
 
 Copy the CoreOS compressed metal RAW image into place on the webserver and set the relevant permissions.
@@ -544,10 +545,10 @@ nslookup master0.ocp4
 
 ## HA Proxy
 
-First, create a backup of the default file (in case you make a mess) if you haven't guessed yet this a personal habit of mine! Then modify the default file to look somthing like the below exmaple.
+First, create a backup of the default file (in case you make a mess) if you haven't guessed yet this is a personal habit of mine! Then modify the default file to look something like the below example.
 
 ```text
-cp -p /etc/haproxy/haproxy.cfg.vanilla
+cp -p /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.vanilla
 vim /etc/haproxy/haproxy.cfg
 ```
 
@@ -798,7 +799,7 @@ imageContentSources:
 
 > Note: I added that bottom one as that source existed on the installation document example. I am not sure if it is necessary or not.
 
-Now that you should have a hopefully killer ```install-config.yaml``` file first create a backup of it (as the installer eats it) then follow the rest of the commands to create the ignition files and then copy them to the webserver.
+Now you should have a hopefully killer ```install-config.yaml``` file first create a backup of it (as the installer eats it) then follow the rest of the commands to create the ignition files and then copy them to the webserver.
 ```text
 cp ~/ocp4/install-config.yaml ~
 cd ~/ocp4
@@ -861,7 +862,7 @@ cd /tmp/rhcos_iso
 vi isolinux/isolinux.cfg
 ```
 
-For the purpose of this activity, I opted to create one multi boot iso with multiple options burnt in. When you boot with this iso you will be able to select which machine you want to create. This is okay, but not exactly a great process. I think I'll do another post around automation of this process, I believe there is some out there already, I just need to have a look, so watch this space!
+For the purpose of this activity, I opted to create one multi boot iso with multiple options burnt in. When you boot with this iso you will be able to select which machine you want to create. This is okay, but not exactly a great process. I think I'll do another post around automation of this process, I believe there are some out there already, I just need to have a look, so watch this space!
 
 A single boot entry will look like this (however everything after append should be on the same line - I've displayed it this way for readability and hopefully make it easier to understand what information we're giving to the boot process):
 ```text
@@ -908,12 +909,12 @@ label linux
   append initrd=/images/initramfs.img nomodeset rd.neednet=1 coreos.inst=yes ip=10.80.158.11::10.80.158.1:255.255.255.240:worker1.ocp4.jftest.com:ens192:none nameserver=10.80.158.5 coreos.inst.install_dev=sda coreos.inst.image_url=http://10.80.158.5:8080/rhcos-4.4.3-x86_64-metal.x86_64.raw.gz  coreos.inst.ignition_url=http://10.80.158.5:8080/worker.ign
 ```
 
-Next job is to package verything up inyo a new shiny new iso. This long one-liner will create a nice iso which you will then use to boot the VMs up with and allow you to select one of the options set above. Special thanks to Shanna for this process! (see references at the bottom)
+Next job is to package everything up into a shiny new iso. This long one-liner will create a nice iso which you will then use to boot the VMs up with and allow you to select one of the options set above. Special thanks to Shanna for this process! (see references at the bottom)
 ```text
 sudo mkisofs -U -A "RHCOS-x86_64" -V "RHCOS-x86_64" -volset "RHCOS-x86_64" -J -joliet-long -r -v -T -x ./lost+found -o /tmp/rhcos_install.iso -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e images/efiboot.img -no-emul-boot .
 ```
 
-## Upload modded iso to Vspere datastaore
+## Upload modded iso to ESXi datastore
 
 To easily upload the modified iso to ESXi datastore I used govc (a vSphere CLI) as I'm somewhat familiar with it. You could probably also just scp/sftp it to the correct directory on the ESXi server. If you wish to do it using govc this is what to do:
 ```text
@@ -939,7 +940,7 @@ govc datastore.upload --ds=datastore1 --dc=ha-datacenter /tmp/rhcos_install.iso 
 
 ## Create VMs
 
-Create VMs using the ova template and then when prompted import the base64 ignition file for its relevant use case... I'm saying this as I did this, however, I do not believe this is required at all as the ignition files will be pulled down when we run the installer from the iso. So if you want to try without feel free to. I'll be revisiting this process for improvements soon so an update is on the way.
+Create VMs using the ova template and then when prompted import the base64 ignition file for its relevant use case... I'm saying this as I did this, however, I do not believe this is required at all as the ignition files will be pulled down when we run the installer from the iso. So if you want to try without, feel free to. I'll be revisiting this process for improvements soon so an update is on the way.
 
 1. Edit boot settings so that the VM boots from cd first
 2. Run the VM and select what element you will be installing e.g. bootstrap first
@@ -950,7 +951,7 @@ I ran step 1 and 2 on all the guest VMs first e.g. bootstrap, x3 masters and x2 
 ![Finished, here's the console](/images/ocp_bootmenu.png#center)
 
 
-## Check bootstrap proces
+## Check bootstrap process
 
 When the VMs are coming up it's really just a waiting game... the below commands might be useful for troubleshooting (they were very useful for me).
 ```text
@@ -967,7 +968,7 @@ Monitor the bootstrap process:
 openshift-install wait-for bootstrap-complete --log-level=info
 ```
 
-If everything is going according to plan the monitoring process will progress to the waiting for bootstrap complete step. Keep this process running in a seperare session.
+If everything is going according to plan the monitoring process will progress to the waiting for the bootstrap complete step. Keep this process running in a separate session.
 ```text
   INFO Waiting up to 20m0s for the Kubernetes API at https://api.ocp4.jftest.com:6443...
   INFO API v1.17.1+f63db30 up
@@ -983,7 +984,7 @@ ssh -i ~/.ssh/vsphere-ocp4 core@10.80.158.9
 
 You can also check the load balancer: http://139.178.72.19:9000/
 
-Once the bootstap process is complete (like with the example below) you can export your KUBECONFIG directory and you can view your nodes.
+Once the bootstrap process is complete (like with the example below) you can export your KUBECONFIG directory and you can view your nodes.
 
 ```text
   INFO Waiting up to 20m0s for the Kubernetes API at https://api.ocp4.jftest.com:6443...
@@ -1049,7 +1050,7 @@ openshift-install wait-for install-complete
   INFO Login to the console with user: kubeadmin, password: jxgag-qtQ27-bCCsW-TauyP
 ```
 
-You should now be able to logon to the web console. I'm doing so from my baston host in the ESXi console.
+You should now be able to login to the web console. I'm doing so from my bastion host in the ESXi console.
 
 ![Finished, here's the console](/images/ocp_vmware_finished.png#center)
 
@@ -1062,7 +1063,7 @@ Congrats, if you made it this far you've completed the installation! ...or just 
 
 The installation process isn't as bad as I thought. It's relatively straight forward once you have the re-reqs such as correct DNS records, a properly configured load balancer and a web server with proper permissions serving the correct content it's fairly straight forward after that.
 
-One thing that I did find odd was that I had to create a VM using the ova as I could'nt get it to work myself when creating a VM. Whenever I tried with a non ova created VM it would hang in the dracut process. Should'nt booting from the iso and it pulling the neccessary file be enough. I'm not quite sure why the ova created VM worked and a non ova created VM didn't... I need to investigate into this some more (there is probably some reason I've missed).
+One thing that I did find odd was that I had to create a VM using the ova as I couldn't get it to work myself when creating a VM. Whenever I tried with a non ova created VM it would hang in the dracut process. Shouldn’t booting from the iso and it pulling the necessary file be enough. I'm not quite sure why the ova created VM worked and a non ova created VM didn't... I need to investigate this some more (there is probably some reason I've missed).
 
 As I mentioned I think I will write another article soon about putting some automation around this process.
 

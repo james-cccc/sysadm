@@ -5,9 +5,372 @@
     <description>Recent content on sysadm.life</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 14 Jun 2020 18:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 22 Jun 2020 18:00:00 +0000</lastBuildDate>
     
         <atom:link href="https://sysadm.life/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    
+        <item>
+        <title>Modifying Openshifts CoreOS ignition files</title>
+        <link>https://sysadm.life/posts/openshift_static_ip_dhcpd/</link>
+        <pubDate>Mon, 22 Jun 2020 18:00:00 +0000</pubDate>
+        
+        <guid>https://sysadm.life/posts/openshift_static_ip_dhcpd/</guid>
+        <description>sysadm.life https://sysadm.life/posts/openshift_static_ip_dhcpd/ -&lt;p&gt;This article was put together to help assist performing Openshift 4 deployments on VMWare ESXi where static IPs are required but where DHCP is available and is allowed to give out temporary addresses. Doing it this way as (opposed to my last article where DHCP was not used) allows us to use the ova templates and will not require the creation of any separate boot isos. This is possible as enabling DHCP will allow the machines that have been created with the just the OVAs to boot first using a random DHCP given IP. However, as we want a static addresses we can set what the network configuration will be by injecting this into the ignition files and once the machine has booted for the first time using DHCP it will then use the network configuration to what is defined in the ignition file going forward.&lt;/p&gt;
+&lt;p&gt;Like my last article, I performed and validated the steps below on ESXi hosted by Packet. I did not include all the steps (like my last article did); only the pertinent parts this time. If you follow my previous article up the the point of generating ignition files you should be able to follow the rest of the steps listed here.&lt;/p&gt;
+&lt;h3 id=&#34;high-level-overview&#34;&gt;High Level Overview&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;Install and setup DHCP server&lt;/li&gt;
+&lt;li&gt;Modify Ignition files&lt;/li&gt;
+&lt;li&gt;Create VMs&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&#34;networking&#34;&gt;Networking&lt;/h3&gt;
+&lt;p&gt;The network setup is the same as it was in the previous article. So I will not go into details here this time as the previous article can be referred to if necessary. For the DHCP element, we only care about addresses in our private range. If you don&amp;rsquo;t want to flick back or read the last article, here&amp;rsquo;s the network summary for our private addresses:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;ADDRESS&lt;/th&gt;
+&lt;th&gt;NETWORK&lt;/th&gt;
+&lt;th&gt;GATEWAY&lt;/th&gt;
+&lt;th&gt;TYPE&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;10.80.158.2&lt;/td&gt;
+&lt;td&gt;10.80.158.0/28&lt;/td&gt;
+&lt;td&gt;10.80.158.1&lt;/td&gt;
+&lt;td&gt;Private IPv4&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;For our private network we have a CIDR of /28, so its netmask is 255.255.255.240.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;ADDRESS&lt;/th&gt;
+&lt;th&gt;USEAGE&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;10.80.158.0&lt;/td&gt;
+&lt;td&gt;Network&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10.80.158.1&lt;/td&gt;
+&lt;td&gt;Gateway&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10.80.158.2&lt;/td&gt;
+&lt;td&gt;ESXi&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10.80.158.3&lt;/td&gt;
+&lt;td&gt;Available&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10.80.158.4&lt;/td&gt;
+&lt;td&gt;Available&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10.80.158.5&lt;/td&gt;
+&lt;td&gt;packetfeathersbastion&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10.80.158.6&lt;/td&gt;
+&lt;td&gt;bootstrap.ocp4&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10.80.158.7&lt;/td&gt;
+&lt;td&gt;master0.ocp4&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10.80.158.8&lt;/td&gt;
+&lt;td&gt;master1.ocp4&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10.80.158.9&lt;/td&gt;
+&lt;td&gt;master2.ocp4&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10.80.158.10&lt;/td&gt;
+&lt;td&gt;worker0.ocp4&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10.80.158.11&lt;/td&gt;
+&lt;td&gt;worker1.ocp4&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10.80.158.12&lt;/td&gt;
+&lt;td&gt;worker2.ocp4&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10.80.158.13&lt;/td&gt;
+&lt;td&gt;Available&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10.80.158.14&lt;/td&gt;
+&lt;td&gt;Available&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10.80.158.15&lt;/td&gt;
+&lt;td&gt;Broadcast&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h1 id=&#34;setup-bastioninstaller-server&#34;&gt;Setup Bastion/Installer server&lt;/h1&gt;
+&lt;h2 id=&#34;setup-dhcp&#34;&gt;Setup DHCP&lt;/h2&gt;
+&lt;p&gt;First, create a backup of the default file (in case you make a mess) and then go ahead and amend the default file &lt;code&gt;/etc/dhcp/dhcpd.conf&lt;/code&gt; with something like the below example. I crafted the below example actually using the shipped example file &lt;code&gt;/usr/share/doc/dhcp-server/dhcpd.conf.example&lt;/code&gt;. It&amp;rsquo;s fairly straight forward, just set the relevant network configuration and range of IP addresses you want to use, in my case I set that to be the four IP adddresses 10.80.158.11 - 10.80.158.14 (this is a very small range but good enough for what we&amp;rsquo;re doing to test this process).&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;sudo yum -y install dhcp-server
+sudo cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcpd.conf.vanilla
+sudo cp /usr/share/doc/dhcp-server/dhcpd.conf.example /etc/dhcp/dhcpd.conf
+sudo vim /etc/dhcp/dhcpd.conf
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;etcdhcpdhcpdconf&#34;&gt;/etc/dhcp/dhcpd.conf&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;# dhcpd.conf
+
+option domain-name &amp;quot;jftest.com&amp;quot;;
+option domain-name-servers 10.80.158.5;
+
+default-lease-time 600;
+max-lease-time 7200;
+
+ddns-update-style interim;
+
+authoritative;
+
+subnet 10.80.158.0 netmask 255.255.255.240 {
+  range 10.80.158.11 10.80.158.14;
+  option routers 10.80.158.1;
+  option routers 10.5.5.1;
+  option broadcast-address 10.80.158.15;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&#34;start-dhcp&#34;&gt;Start DHCP&lt;/h3&gt;
+&lt;p&gt;Add the relevant firewall rules then start the DHCP service. Bonus points if it starts straight away with no errors! If you do get errors, go back and check what you&amp;rsquo;ve done.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;sudo firewall-cmd --add-service=dhcp --permanent
+sudo firewall-cmd --reload
+sudo systemctl enable dhcpd --now
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Great, at this stage if you were to boot a VM with the ova it would pick up an IP address from DHCP and run with it. That might actually be enough for you if this is just a temporary environment where you don&amp;rsquo;t care about static addresses, but if want to set dedicated IPs as mentioned we will have to put them into our ignition files.&lt;/p&gt;
+&lt;h1 id=&#34;ignition&#34;&gt;Ignition&lt;/h1&gt;
+&lt;p&gt;My previous article covered creating the ignition files, so again I will not cover this here. From now the prerequisites and creation of the ignition files should be done. The below file is what my master.ign file that was generated by the Openshift install tool looks like:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-json&#34; data-lang=&#34;json&#34;&gt;{
+  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;ignition&amp;#34;&lt;/span&gt;: {
+    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;config&amp;#34;&lt;/span&gt;: {
+      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;append&amp;#34;&lt;/span&gt;: [
+        {
+          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;source&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;https://api-int.ocp4.jftest.com:22623/config/master&amp;#34;&lt;/span&gt;,
+          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;verification&amp;#34;&lt;/span&gt;: {}
+        }
+      ]
+    },
+    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;security&amp;#34;&lt;/span&gt;: {
+      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;tls&amp;#34;&lt;/span&gt;: {
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;certificateAuthorities&amp;#34;&lt;/span&gt;: [
+          {
+            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;source&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;data:text/plain;charset=utf-8;base64,LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURFRENDQWZpZ0F3SUJBZ0lJVmFMNjVXRGsvdEl3RFFZSktvWklodmNOQVFFTEJRQXdKakVTTUJBR0ExVUUKQ3hNSmIzQmxibk5vYVdaME1SQXdEZ1lEVlFRREV3ZHliMjkwTFdOaE1CNFhEVEl3TURZeE56RTBNVEkwTkZvWApEVE13TURZeE5URTBNVEkwTkZvd0pqRVNNQkFHQTFVRUN4TUpiM0JsYm5Ob2FXWjBNUkF3RGdZRFZRUURFd2R5CmIyOTBMV05oTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUF2a1J4UjlNcm0wRlMKWjdDbnNkdmswOFllaTJoOGlMMWRyejBldzhMNUp0b0F2MzEzM2J4T1ZUcW96aWtMQlUvVUM3b1I4ejVncGFBYgpEOThCdGY5S2FKQ2kyRHRxYjJmQU9KV042L1NYaC9EUjR5T0pyVjY1V1NIKzZyMlJwOVo1b0FlY2IrUXdybEFCCnh3SHVEbVovdDA0Rm5zVktzK3VMQzZ5SitiTU81Y2c2ek55cmlCblkvY2pZd2NEekZNNkowSnJ2VG54VlpCT0YKM0RiOE1XQU02bEIvUjYrTzBKcktuWU1xZXdzYTBwMVpoSVNZMVBCN3RvQTMxS2NaREh2QTZMVW9jTGduQUYwago1Ylk4cVJITHQrcnNrdkJ0dHhMdzlDbVRLTVl6eDZaVlFtTDVjRjVlSCtkVXpNSVhuaHNpdVZnRmJPRXpDbWlRCjBnc29FQXlVU1FJREFRQUJvMEl3UURBT0JnTlZIUThCQWY4RUJBTUNBcVF3RHdZRFZSMFRBUUgvQkFVd0F3RUIKL3pBZEJnTlXIUTRFRmdRVVY3L0tEK3o2TmRQZCs2azNNUVRnWEF1dnVTUXdEUVlKS29aSWh2Y05BUUVMQlFBRApnZ0VCQUs0a3BRTHlleGdWOHBNVAJZZ04xVlpnY25Mb2tOZFhDdG8vTGZ4UldqRElDc1lLWkt3azVZVUg3eTVaCm4wV2svTG9wcFJlNkdCUnpEVStCS3daUEZpZWM0V1FqZnowcWdUZ0tOOVBiNzVVY1hZSjA5RVJQR3N1Ymo5aWoKVlE2VGxPb3lVYnhiWjFsamo4MW1aVmpPc3BQbFhySEF4amwvNjRNckpDRWYzbFRrSnJnZ3p5d2RvTmVmOGo0ZQpmOFZSaFlUQklLQVlLSlorMnZzZkRmejRRT1NRTXFhVUtIRHB5UUthc01zQ3dCSFBjRmZYWUgzTUFVenFTdE90CnYwRHFyMjdkVmRsOU1QZlJXRHkrK3g2Nk80Y2llUE9rbzY1OVo2U3J1TWZrQXkwMGZOcjZYK09JMEpaTnI3QzUKSTUyUHBFRTdhMmVEdGxDa2NsUkhYT3ZaR3ZRPQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==&amp;#34;&lt;/span&gt;,
+            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;verification&amp;#34;&lt;/span&gt;: {}
+          }
+        ]
+      }
+    },
+    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;timeouts&amp;#34;&lt;/span&gt;: {},
+    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;version&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2.2.0&amp;#34;&lt;/span&gt;
+  },
+  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;networkd&amp;#34;&lt;/span&gt;: {},
+  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;passwd&amp;#34;&lt;/span&gt;: {},
+  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;storage&amp;#34;&lt;/span&gt;: {},
+  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;systemd&amp;#34;&lt;/span&gt;: {}
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;fyi&#34;&gt;FYI&lt;/h4&gt;
+&lt;p&gt;To encode and decode a string you can use the &lt;code&gt;base64&lt;/code&gt; command, e.g.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;echo &amp;#39;james&amp;#39; | base64 -w0
+echo &amp;#39;amFtZXMK&amp;#39; | base64 -d
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;This will come in handy.&lt;/p&gt;
+&lt;h3 id=&#34;creating-new-modified-ignition-files&#34;&gt;Creating new modified Ignition files&lt;/h3&gt;
+&lt;p&gt;What we will do here is create a separate ignition file for each node, so for all teh master nodes create a copy of the masters ignition and the same for the workers, for the bootstrap you wil have to create the one ammend-botstrap ignition file. For us to add the network configuration, we can break it down into 2 additional sections that we need to add.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;Network&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;The first section is in the &lt;code&gt;networkd&lt;/code&gt; part, we&amp;rsquo;re adding the IP address, Gateway, DNS and Domain like so:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-json&#34; data-lang=&#34;json&#34;&gt;  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;networkd&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;:&lt;/span&gt; {
+    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;units&amp;#34;&lt;/span&gt;: [
+      {
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;00-ens192.network&amp;#34;&lt;/span&gt;,
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;contents&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;[Match]\nName=ens192\n\n[Network]\nAddress=.10.80.158.7/28\nGateway=10.80.158.1\nDNS=10.80.158.5\nDomains=jftest.com\n&amp;#34;&lt;/span&gt;
+      }
+    ]
+  }&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;,&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ol start=&#34;2&#34;&gt;
+&lt;li&gt;&lt;strong&gt;Storage&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;The second section is in the &lt;code&gt;storage&lt;/code&gt; part where we are defineing two files to be created. The first file is the &lt;code&gt;/etc/hostname&lt;/code&gt; file, in which we are setting it&amp;rsquo;s contents to &lt;code&gt;master0.ocp4.jftest.com&lt;/code&gt;. The second file is the Interface configuration (ifcfg) file where we are adding network configuration.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-json&#34; data-lang=&#34;json&#34;&gt;  &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;storage&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;:&lt;/span&gt; {
+    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;files&amp;#34;&lt;/span&gt;: [
+      {
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;path&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/etc/hostname&amp;#34;&lt;/span&gt;,
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;mode&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;420&lt;/span&gt;,
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;contents&amp;#34;&lt;/span&gt;: {
+          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;source&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;data:text/plain;charset=utf-8;base64,bWFzdGVyMC5vY3A0LmpmdGVzdC5jb20=&amp;#34;&lt;/span&gt;,
+          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;verification&amp;#34;&lt;/span&gt;: {}
+        },
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;filesystem&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;root&amp;#34;&lt;/span&gt;
+      },
+      {
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;path&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/etc/sysconfig/network-scripts/ifcfg-ens192&amp;#34;&lt;/span&gt;,
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;mode&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;420&lt;/span&gt;,
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;contents&amp;#34;&lt;/span&gt;: {
+          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;source&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;data:text/plain;charset=utf-8;base64,IyBHZW5lcmF0ZWQgYnkgY3JlYXRlaWducyAKVFlQRT1FdGhlcm5ldApOQU1FPSJlbnMxOTIiCkRFVklDRT0iZW5zMTkyIgpPTkJPT1Q9eWVzCk5FVEJPT1Q9eWVzCkJPT1RQUk9UTz1ub25lCklQQUREUj0iMTAuODAuMTU4LjciCk5FVE1BU0s9IjI1NS4yNTUuMjU1LjI0MCIKR0FURVdBWT0iMTAuODAuMTU4LjEiCkROUzE9IjEwLjgwLjE1OC41Ig==Cg==&amp;#34;&lt;/span&gt;,
+          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;verification&amp;#34;&lt;/span&gt;: {}
+        },
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;filesystem&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;root&amp;#34;&lt;/span&gt;
+      }
+    ]
+  }&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;,&lt;/span&gt;
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The below is the ifcfg file I created which as mentioned above was converted into a base64 string and added into the ignition file:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;# Generated by createigns
+TYPE=Ethernet
+NAME=&amp;quot;ens192&amp;quot;
+DEVICE=&amp;quot;ens192&amp;quot;
+ONBOOT=yes
+NETBOOT=yes
+BOOTPROTO=none
+IPADDR=&amp;quot;10.80.158.7&amp;quot;
+NETMASK=&amp;quot;255.255.255.240&amp;quot;
+GATEWAY=&amp;quot;10.80.158.1&amp;quot;
+DNS1=&amp;quot;10.80.158.5&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;The reason that we are base64 encoding these values are that there a limit on the size of the config which may be provided to a machine. Therefore, base64 encoding them works around this. We could probably get away with having the hostname in cleartext like shown in the CoreOS documentation like the example below&amp;hellip; but to be on the safe side, probably better to encode it.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-json&#34; data-lang=&#34;json&#34;&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;storage&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;:&lt;/span&gt; {
+   &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;files&amp;#34;&lt;/span&gt;: [
+  {
+     &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;filesystem&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;root&amp;#34;&lt;/span&gt;,
+     &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;path&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/etc/hostname&amp;#34;&lt;/span&gt;,
+     &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;mode&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;420&lt;/span&gt;,
+     &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;contents&amp;#34;&lt;/span&gt;: { &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;source&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;data:,master0&amp;#34;&lt;/span&gt; }
+   }
+ ]
+ }
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;post-modification&#34;&gt;Post Modification&lt;/h4&gt;
+&lt;p&gt;Postmodification each file will look similar to the example below:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-json&#34; data-lang=&#34;json&#34;&gt;{
+  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;ignition&amp;#34;&lt;/span&gt;: {
+    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;config&amp;#34;&lt;/span&gt;: {
+      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;append&amp;#34;&lt;/span&gt;: [
+        {
+          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;source&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;https://api-int.ocp4.jftest.com:22623/config/master&amp;#34;&lt;/span&gt;,
+          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;verification&amp;#34;&lt;/span&gt;: {}
+        }
+      ]
+    },
+    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;security&amp;#34;&lt;/span&gt;: {
+      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;tls&amp;#34;&lt;/span&gt;: {
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;certificateAuthorities&amp;#34;&lt;/span&gt;: [
+          {
+            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;source&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;data:text/plain;charset=utf-8;base64,LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURFRENDQWZpZ0F3SUJBZ0lJVmFMNjVXRGsvdEl3RFFZSktvWklodmNOQVFFTEJRQXdKakVTTUJBR0ExVUUKQ3hNSmIzQmxibk5vYVdaME1SQXdEZ1lEVlFRREV3ZHliMjkwTFdOaE1CNFhEVEl3TURZeE56RTBNVEkwTkZvWApEVE13TURZeE5URTBNVEkwTkZvd0pqRVNNQkFHQTFVRUN4TUpiM0JsYm5Ob2FXWjBNUkF3RGdZRFZRUURFd2R5CmIyOTBMV05oTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUF2a1J4UjlNcm0wRlMKWjdDbnNkdmswOFllaTJoOGlMMWRyejBldzhMNUp0b0F2MzEzM2J4T1ZUcW96aWtMQlUvVUM3b1I4ejVncGFBYgpEOThCdGY5S2FKQ2kyRHRxYjJmQU9KV042L1NYaC9EUjR5T0pyVjY1V1NIKzZyMlJwOVo1b0FlY2IrUXdybEFCCnh3SHVEbVovdDA0Rm5zVktzK3VMQzZ5SitiTU81Y2c2ek55cmlCblkvY2pZd2NEekZNNkowSnJ2VG54VlpCT0YKM0RiOE1XQU02bEIvUjYrTzBKcktuWU1xZXdzYTBwMVpoSVNZMVBCN3RvQTMxS2NaREh2QTZMVW9jTGduQUYwago1Ylk4cVJITHQrcnNrdkJ0dHhMdzlDbVRLTVl6eDZaVlFtTDVjRjVlSCtkVXpNSVhuaHNpdVZnRmJPRXpDbWlRCjBnc29FQXlVU1FJREFRQUJvMEl3UURBT0JnTlZIUThCQWY4RUJBTUNBcVF3RHdZRFZSMFRBUUgvQkFVd0F3RUIKL3pBZEJnTlXIUTRFRmdRVVY3L0tEK3o2TmRQZCs2azNNUVRnWEF1dnVTUXdEUVlKS29aSWh2Y05BUUVMQlFBRApnZ0VCQUs0a3BRTHlleGdWOHBNVAJZZ04xVlpnY25Mb2tOZFhDdG8vTGZ4UldqRElDc1lLWkt3azVZVUg3eTVaCm4wV2svTG9wcFJlNkdCUnpEVStCS3daUEZpZWM0V1FqZnowcWdUZ0tOOVBiNzVVY1hZSjA5RVJQR3N1Ymo5aWoKVlE2VGxPb3lVYnhiWjFsamo4MW1aVmpPc3BQbFhySEF4amwvNjRNckpDRWYzbFRrSnJnZ3p5d2RvTmVmOGo0ZQpmOFZSaFlUQklLQVlLSlorMnZzZkRmejRRT1NRTXFhVUtIRHB5UUthc01zQ3dCSFBjRmZYWUgzTUFVenFTdE90CnYwRHFyMjdkVmRsOU1QZlJXRHkrK3g2Nk80Y2llUE9rbzY1OVo2U3J1TWZrQXkwMGZOcjZYK09JMEpaTnI3QzUKSTUyUHBFRTdhMmVEdGxDa2NsUkhYT3ZaR3ZRPQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==&amp;#34;&lt;/span&gt;,
+            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;verification&amp;#34;&lt;/span&gt;: {}
+          }
+        ]
+      }
+    },
+    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;timeouts&amp;#34;&lt;/span&gt;: {},
+    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;version&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2.2.0&amp;#34;&lt;/span&gt;
+  },
+  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;networkd&amp;#34;&lt;/span&gt;: {
+    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;units&amp;#34;&lt;/span&gt;: [
+      {
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;00-ens192.network&amp;#34;&lt;/span&gt;,
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;contents&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;[Match]\nName=ens192\n\n[Network]\nAddress=.10.80.158.7/28\nGateway=10.80.158.1\nDNS=10.80.158.5\nDomains=jftest.com\n&amp;#34;&lt;/span&gt;
+      }
+    ]
+  },
+  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;passwd&amp;#34;&lt;/span&gt;: {},
+  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;storage&amp;#34;&lt;/span&gt;: {
+    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;files&amp;#34;&lt;/span&gt;: [
+      {
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;path&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/etc/hostname&amp;#34;&lt;/span&gt;,
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;mode&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;420&lt;/span&gt;,
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;contents&amp;#34;&lt;/span&gt;: {
+          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;source&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;data:text/plain;charset=utf-8;base64,bWFzdGVyMC5vY3A0LmpmdGVzdC5jb20=&amp;#34;&lt;/span&gt;,
+          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;verification&amp;#34;&lt;/span&gt;: {}
+        },
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;filesystem&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;root&amp;#34;&lt;/span&gt;
+      },
+      {
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;path&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/etc/sysconfig/network-scripts/ifcfg-ens192&amp;#34;&lt;/span&gt;,
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;mode&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;420&lt;/span&gt;,
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;contents&amp;#34;&lt;/span&gt;: {
+          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;source&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;data:text/plain;charset=utf-8;base64,IyBHZW5lcmF0ZWQgYnkgY3JlYXRlaWducyAKVFlQRT1FdGhlcm5ldApOQU1FPSJlbnMxOTIiCkRFVklDRT0iZW5zMTkyIgpPTkJPT1Q9eWVzCk5FVEJPT1Q9eWVzCkJPT1RQUk9UTz1ub25lCklQQUREUj0iMTAuODAuMTU4LjciCk5FVE1BU0s9IjI1NS4yNTUuMjU1LjI0MCIKR0FURVdBWT0iMTAuODAuMTU4LjEiCkROUzE9IjEwLjgwLjE1OC41Ig==&amp;#34;&lt;/span&gt;,
+          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;verification&amp;#34;&lt;/span&gt;: {}
+        },
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;filesystem&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;root&amp;#34;&lt;/span&gt;
+      }
+    ]
+  },
+  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;systemd&amp;#34;&lt;/span&gt;: {}
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;You can validate your ignition files created online here: &lt;a href=&#34;https://coreos.com/validate/&#34;&gt;https://coreos.com/validate/&lt;/a&gt; (which is worth doing).&lt;/p&gt;
+&lt;p&gt;You can then create the base64 encoded version of the ignition files, like so:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;base64 -w0 ~/ocp4/master0.ocp4.jftest.com.ign &amp;gt; ~/ocp4/master0.ocp4.jftest.com.64
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The base64 encoded strings can then be used when you create the VM in ESXi. It will first boot the VM with a temporary DHCP assigned IP whilst it comes up, then once it&amp;rsquo;s up it will set the static IP configuration. You will see the IP address in the console when the VM is up.&lt;/p&gt;
+&lt;h1 id=&#34;openshift-install-process&#34;&gt;Openshift Install Process&lt;/h1&gt;
+&lt;h2 id=&#34;create-vms&#34;&gt;Create VMs&lt;/h2&gt;
+&lt;p&gt;If you are creating the VMs using the ESXi web management console create the VMs using the ova template and then when prompted import the base64 ignition file for that specific VM. Nothing more should be required at this stage other than to power it on and wait. The bootstrap process will start and that&amp;rsquo;s basically the start of the end of the install, mainly just waiting around at this stage, so feel free to make a brew or whatever.&lt;/p&gt;
+&lt;p&gt;If you are feeling like you&amp;rsquo;d like to provsion the VM&amp;rsquo;s in a better more automated way, you every much can! I was able to use the below ansible playbook to do just that and it worked gloriously.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;---
+- &lt;span style=&#34;color:#66d9ef&#34;&gt;name&lt;/span&gt;: Create VMs
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;hosts&lt;/span&gt;: localhost
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;tasks&lt;/span&gt;:
+
+  - &lt;span style=&#34;color:#66d9ef&#34;&gt;name&lt;/span&gt;: Provision VM using OVA
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;vmware_deploy_ovf&lt;/span&gt;:
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;hostname&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;139.178.72.66&amp;#39;&lt;/span&gt;
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;username&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;root&amp;#39;&lt;/span&gt;
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;password&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;n4{D2^U5Gg&amp;#39;&lt;/span&gt;
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;datacenter&lt;/span&gt;: ha-datacenter
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;datastore&lt;/span&gt;: datastore1
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;validate_certs&lt;/span&gt;: no
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;ovf&lt;/span&gt;: /home/james/rhcos&lt;span style=&#34;color:#ae81ff&#34;&gt;-4.4.3&lt;/span&gt;-x86_64-vmware.x86_64.ova
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;name&lt;/span&gt;: bootstrap.ocp4.jftest.com
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;power_on&lt;/span&gt;: no
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;inject_ovf_env&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;properties&lt;/span&gt;:
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;guestinfo.ignition.config.data.encoding&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;base64&amp;#34;&lt;/span&gt;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;guestinfo.ignition.config.data&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ewogICJpZ25pdGlvbiI6IHsKICAgICJjb25maWciOiB7CiAgICAgICJhcHBlbmQiOiBbCiAgICAgICAgewogICAgICAgICAgInNvdXJjZSI6ICJodHRwOi8vMTAuODAuMTU4LjU6ODA4MC9ib290c3RyYXAuaWduIiwKICAgICAgICAgICJ2ZXJpZmljYXRpb24iOiB7fQogICAgICAgIH0KICAgICAgXQogICAgfSwKICAgICJ0aW1lb3V0cyI6IHt9LAogICAgInZlcnNpb24iOiAiMi4xLjAiCiAgfSwKICAibmV0d29ya2QiOiB7CiAgICAidW5pdHMiOiBbCiAgICAgIHsKICAgICAgICAibmFtZSI6ICIwMC1lbnMxOTIubmV0d29yayIsCiAgICAgICAgImNvbnRlbnRzIjogIltNYXRjaF1cbk5hbWU9ZW5zMTkyXG5cbltOZXR3b3JrXVxuQWRkcmVzcz0uMTAuODAuMTU4LjYvMjhcbkdhdGV3YXk9MTAuODAuMTU4LjFcbkROUz0xMC44MC4xNTguNVxuRG9tYWlucz1qZnRlc3QuY29tXG4iCiAgICAgIH0KICAgIF0KICB9LAogICJwYXNzd2QiOiB7fSwKICAic3RvcmFnZSI6IHsKICAgICJmaWxlcyI6IFsKICAgICAgewogIAAgICAgICJwYXRoIjogIi9ldGMvaG9zdG5hbWUiLAogICAgICAgICJtb2RlIjogNDIwLAogICAgICAgICJjb250ZW50cyI6IHsKICAgICAgICAgICJzb3VyY2UiOiAiZGF0YTp0ZXh0L3BsYWluO2NoYXJzZXQ9dXRmLTg7YmFzZTY0LFltOXZkSE4wY21Gd0xtOWpjRFF1YW1aMFpYTjBMbU52YlE9PSIsCiAgICAgICAgICAidmVyaWZpY2F0aW9uIjoge30KICAgICAgICB9LAogICAgICAgICJmaWxlc3lzdGVtIjogInJvb3QiCiAgICAgIH0sCiAgICAgIHsKICAgICAgICAicGF0aCI6ICIvZXRjL3N5c2NvbmZpZy9uZXR3b3JrLXNjcmlwdHMvaWZjZmctZW5zMTkyIiwKICAgICAgICAibW9kZSI6IDQyMCwKICAgICAgICAiY29udGVudHMiOiB7CiAgICAgICAgICAic291cmNlIjogImRhdGE6dGV4dC9wbGFpbjtjaGFyc2V0PXV0Zi04O2Jhc2U2NCxJeUJIWlc1bGNtRjBaV1FnWW5rZ1kzSmxZWFJsYVdkdWN5QUtWRmxRUlQxRmRHaGxjbTVsZEFwT1FVMUZQU0psYm5NeE9USWlDa1JGVmtsRFJUMGlaVzV6TVRreUlncFBUa0pQVDFROWVXVnpDazVGVkVKUFQxUTllV1Z6Q2tKUFQxUlFVazlVVHoxdWIyNWxDa2xRUVVSRVVqMGlNVEF1T0RBdU1UVTRMallpQ2s1RlZFMUJVMHM5SWpJMU5TNHlOVFV1TWpVMUxqSTBNQ0lLUjBGVVJWZEJXVDBpTVRBdU9EQXVNVFU0TGpFaUNrUk9VekU5SWpFd0xqZ3dMakUxT0M0MUlnPT0iLAogICAgICAgICAgInZlcmlmaWNhdGlvbiI6IHt9CiAgICAgICAgfSwKICAgICAgICAiZmlsZXN5c3RlbSI6ICJyb290IgogICAgICB9CiAgICBdCiAgfSwKICAic3lzdGVtZCI6IHt9Cn0=&amp;#34;&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;delegate_to&lt;/span&gt;: localhost
+
+  - &lt;span style=&#34;color:#66d9ef&#34;&gt;name&lt;/span&gt;: Reconfigure CPU, RAM and HDD size of VM
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;vmware_guest&lt;/span&gt;:
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;hostname&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;139.178.72.66&amp;#39;&lt;/span&gt;
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;username&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;root&amp;#39;&lt;/span&gt;
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;password&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;n4{D2^U5Gg&amp;#39;&lt;/span&gt;
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;datacenter&lt;/span&gt;: ha-datacenter
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;datastore&lt;/span&gt;: datastore1
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;name&lt;/span&gt;: bootstrap.ocp4.jftest.com
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;state&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;present&amp;#34;&lt;/span&gt;
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;validate_certs&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;false&amp;#34;&lt;/span&gt;
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;hardware&lt;/span&gt;:
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;memory_mb&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;16384&amp;#34;&lt;/span&gt;
+        &lt;span style=&#34;color:#66d9ef&#34;&gt;num_cpus&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;4&amp;#34;&lt;/span&gt;
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;disk&lt;/span&gt;:
+        - &lt;span style=&#34;color:#66d9ef&#34;&gt;size_gb&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;60&lt;/span&gt;
+          &lt;span style=&#34;color:#66d9ef&#34;&gt;type&lt;/span&gt;: thin
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;delegate_to&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;localhost&amp;#34;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;I won&amp;rsquo;t cover the last steps of bringing up the cluster and approving the workers certs etc as the previous article covers all that (the process is similar if not the same at this stage anyway).&lt;/p&gt;
+&lt;h1 id=&#34;summary&#34;&gt;Summary&lt;/h1&gt;
+&lt;p&gt;I like this process a bit more than the last one, however, a DHCPD instance is required and you have to be careful adding DHCP into an environment that doesn&amp;rsquo;t have one. Special thanks to Alejandro for the inspiration for this process! (see references at the bottom).&lt;/p&gt;
+&lt;p&gt;I&amp;rsquo;ve put together a role to create a set of base64 encoded ignition files. This might be useful to quickly generate all necessary ignitions &lt;a href=&#34;https://github.com/james-cccc/createigns&#34;&gt;https://github.com/james-cccc/createigns&lt;/a&gt; - I do plan on working this further to not only generate the modified ignitions but also do the provisioning maybe using the &lt;code&gt;vmware_deploy_ovf&lt;/code&gt; module.&lt;/p&gt;
+&lt;h1 id=&#34;references&#34;&gt;References&lt;/h1&gt;
+&lt;p&gt;The below documentation and articles helped me put all this together.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.openshift.com/blog/how-to-install-openshift-on-vmware-with-terraform-and-static-ip-addresses&#34;&gt;https://www.openshift.com/blog/how-to-install-openshift-on-vmware-with-terraform-and-static-ip-addresses&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://coreos.com/ignition/docs/latest/examples.html&#34;&gt;https://coreos.com/ignition/docs/latest/examples.html&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://coreos.com/ignition/docs/latest/network-configuration.html&#34;&gt;https://coreos.com/ignition/docs/latest/network-configuration.html&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.ansible.com/ansible/latest/modules/vmware_deploy_ovf_module.html&#34;&gt;https://docs.ansible.com/ansible/latest/modules/vmware_deploy_ovf_module.html&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.ansible.com/ansible/latest/modules/vmware_guest_module.html&#34;&gt;https://docs.ansible.com/ansible/latest/modules/vmware_guest_module.html&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+- https://sysadm.life/posts/openshift_static_ip_dhcpd/ - </description>
+        </item>
     
     
     
@@ -17,16 +380,30 @@
         <pubDate>Sun, 14 Jun 2020 18:00:00 +0000</pubDate>
         
         <guid>https://sysadm.life/posts/openshift_static_ip_disconnected_esxi_install/</guid>
-        <description>sysadm.life https://sysadm.life/posts/openshift_static_ip_disconnected_esxi_install/ -&lt;p&gt;This article aims to present the steps required to create the minimum necessary infrastructure to install and gain familiarity with Openshift 4.4 on VMware Esxi (hosted on packet.com) using static IP addresses in a disconnected environment&amp;hellip; so a bit more than the standard run of the mill install!&lt;/p&gt;
-&lt;p&gt;So why did I choose this setup? Well, I chose to use Packet as they provide easily provisionable bare mental in the cloud that is reasonably priced and I&amp;rsquo;m hoping that if someone wanted to replicate this setup they could easily do so following the below steps. This activity may potentially be a decent exercise to become somewhat familiar and comfortable performing a UPI (that&amp;rsquo;s User Provisioned Infrastructure) installation of Opeshift. I additionally chose to do a disconnected installation using static IPs to add to the fun and give you the reader a wider view on the installation process (plus I have a gig coming up where I&amp;rsquo;m about to do just that&amp;hellip; so there is also that reason)!&lt;/p&gt;
+        <description>sysadm.life https://sysadm.life/posts/openshift_static_ip_disconnected_esxi_install/ -&lt;p&gt;This article aims to present the steps required to create the minimum necessary infrastructure to install and gain familiarity with Openshift 4.4 on VMware ESXi (hosted on packet.com) using static IP addresses in a disconnected environment&amp;hellip; so a bit more than the standard run of the mill install!&lt;/p&gt;
+&lt;p&gt;So why did I choose this setup? Well, I chose to use Packet as they provide easily provisionable bare metal in the cloud that is reasonably priced and I&amp;rsquo;m hoping that if someone wanted to replicate this setup they could easily do so following the below steps. This activity may potentially be a decent exercise to become somewhat familiar and comfortable performing a UPI (that&amp;rsquo;s User Provisioned Infrastructure) installation of Openshift. I additionally chose to do a disconnected installation using static IPs to add to the fun and give you the reader a wider view on the installation process (plus I have a gig coming up where I&amp;rsquo;m about to do just that&amp;hellip; so there is also that reason)!&lt;/p&gt;
 &lt;p&gt;For a bit of background, I&amp;rsquo;m very much new to Openshift myself. Previous to starting this I did a couple of very boring AWS IPI (installer provisioned infrastructure) installations&amp;hellip; which were very much &amp;lsquo;click button&amp;rsquo; then make a brew whilst you wait for it to come up. That was nice, but I didn&amp;rsquo;t really learn a lot. I then performed a UPI install on Openstack. So really, this is my second proper UPI install. Hopefully, the below ramblings will be useful to others in the same position as me.&lt;/p&gt;
 &lt;p&gt;Before continuing, I suggest you quickly read the Packet guide on using ESXi on Packet.&lt;/p&gt;
 &lt;p&gt;&lt;a href=&#34;https://www.packet.com/resources/guides/esxi/&#34;&gt;https://www.packet.com/resources/guides/esxi/&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;high-level-overview&#34;&gt;High Level Overview&lt;/h3&gt;
+&lt;p&gt;This article will cover the below steps in order to build an Openshift cluster from nothing:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Provision ESXi&lt;/li&gt;
+&lt;li&gt;Create a Bastion VM&lt;/li&gt;
+&lt;li&gt;Setup a container registry&lt;/li&gt;
+&lt;li&gt;Setup an Apache webserver&lt;/li&gt;
+&lt;li&gt;Setup DNS&lt;/li&gt;
+&lt;li&gt;Setup HAProxy&lt;/li&gt;
+&lt;li&gt;Create ignition files&lt;/li&gt;
+&lt;li&gt;Create a boot iso&lt;/li&gt;
+&lt;li&gt;Create bootstrap and cluster VMs&lt;/li&gt;
+&lt;li&gt;Check bootstrap process and approve CSRs.&lt;/li&gt;
+&lt;/ol&gt;
 &lt;h1 id=&#34;packet-preamble&#34;&gt;Packet Preamble&lt;/h1&gt;
-&lt;p&gt;In total it took me 4 days to get this process together and get it working. I was provisioning a new server each day starting fresh and then throwing it away at the end of the day. I estimate that with the below information someone could run through this process in about a day. The total cost I incurred was $19.93, and I actually found a voucher &amp;lsquo;nixos&amp;rsquo; for $25 Packet credit, so effecively it didn&amp;rsquo;t cost me anything! I initially used the &amp;lsquo;c1.small.x86&amp;rsquo; instances at $0.40 per hour to understand how packet and Esxi work, I then used the &amp;lsquo;c2.medium.x86&amp;rsquo; instances at $1.00 per hour to perform the actual Openshift installation. You may think that the &amp;lsquo;c2.medium.x86&amp;rsquo; instance is a bit lacking for an Openshift install with its measly 64GB of RAM.. technically it is, however you can get away overcommitting the VM guest machines memory, at least for the installation process anyway. Here was my useage for the week:&lt;/p&gt;
+&lt;p&gt;In total it took me 4 days to get this process together and get it working. I was provisioning a new server each day starting fresh and then throwing it away at the end of the day. I estimate that with the below information someone could run through this process in about a day. The total cost I incurred was $19.93, and I actually found a voucher &amp;lsquo;nixos&amp;rsquo; for $25 Packet credit, so effectively it didn&amp;rsquo;t cost me anything! I initially used the &amp;lsquo;c1.small.x86&amp;rsquo; instances at $0.40 per hour to understand how packet and Esxi work, I then used the &amp;lsquo;c2.medium.x86&amp;rsquo; instances at $1.00 per hour to perform the actual Openshift installation. You may think that the &amp;lsquo;c2.medium.x86&amp;rsquo; instance is a bit lacking for an Openshift install with its measly 64GB of RAM.. technically it is, however you can get away overcommitting the VM guest machines memory, at least for the installation process anyway. Here was my usage for the week:&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://sysadm.life/images/finished14.png#center&#34; alt=&#34;Shiny new server&#34;&gt;&lt;/p&gt;
 &lt;h3 id=&#34;provision-esxi&#34;&gt;Provision ESXi&lt;/h3&gt;
-&lt;p&gt;Although not mandatory, I suggest to add your shh public key to your packet account before provisioning any server. Choose a suitable instance such as the c2.medium.x86. Set it&amp;rsquo;s OS to be VMware ESXi 6.5. In the optional settings select Configure IPs and select the /28 subnet in the Private IPv4 section. The provisiong process takes 5 minutes or so, once it has completed you can click the instance name in your list of servers to see its details.&lt;/p&gt;
+&lt;p&gt;Although not mandatory, I suggest adding your ssh public key to your packet account before provisioning any server. Choose a suitable instance such as the c2.medium.x86. Set it&amp;rsquo;s OS to be VMware ESXi 6.5. In the optional settings select Configure IPs and select the /28 subnet in the Private IPv4 section. The provisioning process takes 5 minutes or so, once it has completed you can click the instance name in your list of servers to see its details.&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://sysadm.life/images/ocp_finished10.png#center&#34; alt=&#34;Shiny new server&#34;&gt;&lt;/p&gt;
 &lt;h3 id=&#34;networking&#34;&gt;Networking&lt;/h3&gt;
 &lt;p&gt;Post provisiong your server on the overview page you will see a table of its network configuration that will look like mine below.&lt;/p&gt;
@@ -62,7 +439,7 @@
 &lt;/table&gt;
 &lt;p&gt;Using this table we can define our free IP addresses. Before continuing I recommend making a quick table of your network configuration. This online tool here can help you work our your IPs if you are unsure: &lt;a href=&#34;http://magic-cookie.co.uk/iplist.html&#34;&gt;http://magic-cookie.co.uk/iplist.html&lt;/a&gt;&lt;/p&gt;
 &lt;h4 id=&#34;public&#34;&gt;Public&lt;/h4&gt;
-&lt;p&gt;For our public network we have a CIDR of /29, so its netmask is 255.255.255.248. Using the network address and CIDR we can work out the available IPs that we have. Therefore, with 139.178.72.16/29 we have 8 addresses in the range of: 139.178.72.16-139.178.72.23 (again as mentioned in the Packet ESXi guide 4 of these addresses are used). We will use the first avaible IP 139.178.72.19 to be our bastion VM.&lt;/p&gt;
+&lt;p&gt;For our public network we have a CIDR of /29, so its netmask is 255.255.255.248. Using the network address and CIDR we can work out the available IPs that we have. Therefore, with 139.178.72.16/29 we have 8 addresses in the range of: 139.178.72.16-139.178.72.23 (again as mentioned in the Packet ESXi guide 4 of these addresses are used). We will use the first available IP 139.178.72.19 to be our bastion VM.&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
 &lt;tr&gt;
@@ -189,8 +566,8 @@ mkdir /vmfs/volumes/datastore1/iso
 cd /vmfs/volumes/datastore1/iso
 wget http://mirror.as29550.net/mirror.centos.org/8.1.1911/isos/x86_64/CentOS-8.1.1911-x86_64-dvd1.iso
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;create-the-bastion-vm&#34;&gt;Create the bastion VM&lt;/h3&gt;
-&lt;p&gt;Log into your ESXi web console which will be somthing like: https://139.178.72.18/ui/#/login&lt;/p&gt;
-&lt;p&gt;Create VM a VM with 2 NICs, 4GB RAM, 40GB HDD, 2 VPCUs and mount the Centos8 iso to the DVD drive. Power the VM on and progress with the installation process using the console. When you get to the configuration screen the only important section is the Network one. Configure your hostname and domain to be somthing like &amp;lsquo;packetfeathersbastion.jftest.com&amp;rsquo;.&lt;/p&gt;
+&lt;p&gt;Log into your ESXi web console which will be something like: https://139.178.72.18/ui/#/login&lt;/p&gt;
+&lt;p&gt;Create a VM with 2 NICs, 4GB RAM, 40GB HDD, 2 VPCUs and mount the Centos8 iso to the DVD drive. Power the VM on and progress with the installation process using the console. When you get to the configuration screen the only important section is the Network one. Configure your hostname and domain to be something like &amp;lsquo;packetfeathersbastion.jftest.com&amp;rsquo;.&lt;/p&gt;
 &lt;p&gt;Configure the first NIC manually to be your public network:&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
@@ -256,14 +633,15 @@ sudo systemctl restart sshd
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;nmcli device status
 sudo nmcli device connect ens34
 nmcli connection show
-nmcli device modify ens34 autoconnect yes
+sudo nmcli device modify ens34 autoconnect yes
+sudo nmcli con mod ens34 connection.autoconnect yes
 ip addr show
 ping 10.80.158.2
 ping 139.178.72.18
 cat /etc/sysconfig/network-scripts/*
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Install the necessary packages.&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;yum install epel-release -y
-yum install httpd httpd-tools podman-docker.noarch podman bind haproxy jq -y
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;sudo yum install epel-release -y
+sudo yum install httpd httpd-tools podman-docker.noarch podman bind haproxy jq -y
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;stage-openshift-installation-media&#34;&gt;Stage Openshift installation media&lt;/h4&gt;
 &lt;p&gt;On the bastion VM stage the below media and add the CLI tools into a directory in your PATH environment variable for ease of use.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;cd ~
@@ -326,7 +704,7 @@ cat  /tmp/pull-secret.text | jq .  &amp;gt; /tmp/pull-secret.json
 }&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;,&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The full auth file can also be generated with the below command, but be careful and don&amp;rsquo;t go full-on copypasta as you don&amp;rsquo;t need all the contents of the file.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;podman login -u james -p fugazi77 --authfile /tmp/pullsecret_config.json packetfeathersbastion.jftest.com:5000
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Now you have a new auth file make an &amp;lsquo;ugly&amp;rsquo; copy for later.&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Now you have a new auth file, make an &amp;lsquo;ugly&amp;rsquo; copy for later.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;cat /tmp/pull-secret.json | jq -c . /tmp/pull-secret.json &amp;gt;&amp;gt; /tmp/pull-secret-ugly.json
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;mirror-the-ocp-registry&#34;&gt;Mirror the OCP Registry&lt;/h3&gt;
 &lt;p&gt;Now that we have a container registry up and running and a pull secret containing authentication for both the official and your registry you should now be ready to mirror the registry for the release that you want.&lt;/p&gt;
@@ -358,9 +736,9 @@ export RELEASE_NAME=&amp;#34;ocp-release&amp;#34;
 &lt;p&gt;The Openshift install procedure here requires hosting the ignition files and the compressed metal RAW image. Set the server to listen on just the internal IP address on port 8080 and then start the service.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;sudo semanage port -a -t http_port_t -p tcp 8080
 sudo sed -i &amp;#39;s/Listen 80/Listen 10.80.158.5:8080/&amp;#39; /etc/httpd/conf/httpd.conf
-firewall-cmd --add-port=8080/tcp --permanent
-firewall-cmd --reload
-systemctl enable --now httpd
+sudo firewall-cmd --add-port=8080/tcp --permanent
+sudo firewall-cmd --reload
+sudo systemctl enable --now httpd
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Copy the CoreOS compressed metal RAW image into place on the webserver and set the relevant permissions.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;cp ~/rhcos-4.4.3-x86_64-metal.x86_64.raw.gz /var/www/html/
 chmod 644 /var/www/html/*
@@ -545,8 +923,8 @@ nslookup api.ocp4.jftest.com
 nslookup api-int.ocp4.jftest.com
 nslookup master0.ocp4
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;ha-proxy&#34;&gt;HA Proxy&lt;/h2&gt;
-&lt;p&gt;First, create a backup of the default file (in case you make a mess) if you haven&amp;rsquo;t guessed yet this a personal habit of mine! Then modify the default file to look somthing like the below exmaple.&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;cp -p /etc/haproxy/haproxy.cfg.vanilla
+&lt;p&gt;First, create a backup of the default file (in case you make a mess) if you haven&amp;rsquo;t guessed yet this is a personal habit of mine! Then modify the default file to look something like the below example.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;cp -p /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.vanilla
 vim /etc/haproxy/haproxy.cfg
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;etchaproxyhaproxycfg&#34;&gt;/etc/haproxy/haproxy.cfg&lt;/h4&gt;
 &lt;pre&gt;&lt;code&gt;#---------------------------------------------------------------------
@@ -769,7 +1147,7 @@ vim install-config.yaml
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
 &lt;p&gt;Note: I added that bottom one as that source existed on the installation document example. I am not sure if it is necessary or not.&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;p&gt;Now that you should have a hopefully killer &lt;code&gt;install-config.yaml&lt;/code&gt; file first create a backup of it (as the installer eats it) then follow the rest of the commands to create the ignition files and then copy them to the webserver.&lt;/p&gt;
+&lt;p&gt;Now you should have a hopefully killer &lt;code&gt;install-config.yaml&lt;/code&gt; file first create a backup of it (as the installer eats it) then follow the rest of the commands to create the ignition files and then copy them to the webserver.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;cp ~/ocp4/install-config.yaml ~
 cd ~/ocp4
 openshift-install create manifests
@@ -812,14 +1190,16 @@ sudo mount rhcos-4.4.3-x86_64-installer.x86_64.iso /mnt/rhcos_iso/
 rsync -a /mnt/* /tmp/
 cd /tmp/rhcos_iso
 vi isolinux/isolinux.cfg
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;For the purpose of this activity, I opted to create one multi boot iso with multiple options burnt in. When you boot with this iso you will be able to select which machine you want to create. This is okay, but not exactly a great process. I think I&amp;rsquo;ll do another post around automation of this process, I believe there is some out there already, I just need to have a look, so watch this space!&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;For the purpose of this activity, I opted to create one multi boot iso with multiple options burnt in. When you boot with this iso you will be able to select which machine you want to create. This is okay, but not exactly a great process. I think I&amp;rsquo;ll do another post around automation of this process, I believe there are some out there already, I just need to have a look, so watch this space!&lt;/p&gt;
 &lt;p&gt;A single boot entry will look like this (however everything after append should be on the same line - I&amp;rsquo;ve displayed it this way for readability and hopefully make it easier to understand what information we&amp;rsquo;re giving to the boot process):&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;label linux
   menu label ^Install RHEL CoreOS bootstrap0
   kernel /images/vmlinuz
-  append initrd=/images/initramfs.img nomodeset rd.neednet=1 coreos.inst=yes ip=10.80.158.6::10.80.158.1:255.255.255.240:bootstrap0.ocp4.jftest.com:ens192:none nameserver=10.80.158.5
+  append initrd=/images/initramfs.img nomodeset rd.neednet=1
+  coreos.inst=yes ip=10.80.158.6::10.80.158.1:255.255.255.240:bootstrap0.ocp4.jftest.com:ens192:none nameserver=10.80.158.5
   coreos.inst.install_dev=sda
-  coreos.inst.image_url=http://10.80.158.5:8080/rhcos-4.4.3-x86_64-metal.x86_64.raw.gz  coreos.inst.ignition_url=http://10.80.158.5:8080/bootstrap.ign
+  coreos.inst.image_url=http://10.80.158.5:8080/rhcos-4.4.3-x86_64-metal.x86_64.raw.gz
+  coreos.inst.ignition_url=http://10.80.158.5:8080/bootstrap.ign
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;So when you&amp;rsquo;ve understood and digested what the above is doing (the actual Openshift documentation for a bare metal install explains this well so I won&amp;rsquo;t bother) add the multiple boot option entries into the &amp;lsquo;isolinux.cfg&amp;rsquo; file towards the bottom (there will be one existing one so where to put them should be self-explanatory). Quoting the classic line &amp;ldquo;Here&amp;rsquo;s one I made earlier&amp;rdquo;:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;label linux
   menu label ^Install RHEL CoreOS bootstrap0
@@ -850,9 +1230,9 @@ label linux
   menu label ^Install RHEL CoreOS worker1
   kernel /images/vmlinuz
   append initrd=/images/initramfs.img nomodeset rd.neednet=1 coreos.inst=yes ip=10.80.158.11::10.80.158.1:255.255.255.240:worker1.ocp4.jftest.com:ens192:none nameserver=10.80.158.5 coreos.inst.install_dev=sda coreos.inst.image_url=http://10.80.158.5:8080/rhcos-4.4.3-x86_64-metal.x86_64.raw.gz  coreos.inst.ignition_url=http://10.80.158.5:8080/worker.ign
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Next job is to package verything up inyo a new shiny new iso. This long one-liner will create a nice iso which you will then use to boot the VMs up with and allow you to select one of the options set above. Special thanks to Shanna for this process! (see references at the bottom)&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Next job is to package everything up into a shiny new iso. This long one-liner will create a nice iso which you will then use to boot the VMs up with and allow you to select one of the options set above. Special thanks to Shanna for this process! (see references at the bottom)&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;sudo mkisofs -U -A &amp;#34;RHCOS-x86_64&amp;#34; -V &amp;#34;RHCOS-x86_64&amp;#34; -volset &amp;#34;RHCOS-x86_64&amp;#34; -J -joliet-long -r -v -T -x ./lost+found -o /tmp/rhcos_install.iso -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e images/efiboot.img -no-emul-boot .
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;upload-modded-iso-to-vspere-datastaore&#34;&gt;Upload modded iso to Vspere datastaore&lt;/h2&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;upload-modded-iso-to-esxi-datastore&#34;&gt;Upload modded iso to ESXi datastore&lt;/h2&gt;
 &lt;p&gt;To easily upload the modified iso to ESXi datastore I used govc (a vSphere CLI) as I&amp;rsquo;m somewhat familiar with it. You could probably also just scp/sftp it to the correct directory on the ESXi server. If you wish to do it using govc this is what to do:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;wget https://github.com/vmware/govmomi/releases/download/v0.22.1/govc_linux_amd64.gz
 gunzip govc_linux_amd64.gz
@@ -867,7 +1247,7 @@ export GOVC_INSECURE=1
 govc datastore.upload --ds=datastore1 --dc=ha-datacenter /tmp/rhcos_install.iso iso/rhcos_install.iso
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h1 id=&#34;openshift-install-process&#34;&gt;Openshift Install Process&lt;/h1&gt;
 &lt;h2 id=&#34;create-vms&#34;&gt;Create VMs&lt;/h2&gt;
-&lt;p&gt;Create VMs using the ova template and then when prompted import the base64 ignition file for its relevant use case&amp;hellip; I&amp;rsquo;m saying this as I did this, however, I do not believe this is required at all as the ignition files will be pulled down when we run the installer from the iso. So if you want to try without feel free to. I&amp;rsquo;ll be revisiting this process for improvements soon so an update is on the way.&lt;/p&gt;
+&lt;p&gt;Create VMs using the ova template and then when prompted import the base64 ignition file for its relevant use case&amp;hellip; I&amp;rsquo;m saying this as I did this, however, I do not believe this is required at all as the ignition files will be pulled down when we run the installer from the iso. So if you want to try without, feel free to. I&amp;rsquo;ll be revisiting this process for improvements soon so an update is on the way.&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;Edit boot settings so that the VM boots from cd first&lt;/li&gt;
 &lt;li&gt;Run the VM and select what element you will be installing e.g. bootstrap first&lt;/li&gt;
@@ -875,7 +1255,7 @@ govc datastore.upload --ds=datastore1 --dc=ha-datacenter /tmp/rhcos_install.iso 
 &lt;/ol&gt;
 &lt;p&gt;I ran step 1 and 2 on all the guest VMs first e.g. bootstrap, x3 masters and x2 workers. Then I performed step 3 and booted the bootstrap and masters in order. I later booted the workers when the masters were up.&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://sysadm.life/images/ocp_bootmenu.png#center&#34; alt=&#34;Finished, here&amp;rsquo;s the console&#34;&gt;&lt;/p&gt;
-&lt;h2 id=&#34;check-bootstrap-proces&#34;&gt;Check bootstrap proces&lt;/h2&gt;
+&lt;h2 id=&#34;check-bootstrap-process&#34;&gt;Check bootstrap process&lt;/h2&gt;
 &lt;p&gt;When the VMs are coming up it&amp;rsquo;s really just a waiting game&amp;hellip; the below commands might be useful for troubleshooting (they were very useful for me).&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;ssh -i ~/.ssh/vsphere-ocp4 core@10.80.158.6
 ip addr show
@@ -885,7 +1265,7 @@ journalctl -u release-image.service
 journalctl -b -f -u bootkube.service
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Monitor the bootstrap process:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;openshift-install wait-for bootstrap-complete --log-level=info
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;If everything is going according to plan the monitoring process will progress to the waiting for bootstrap complete step. Keep this process running in a seperare session.&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;If everything is going according to plan the monitoring process will progress to the waiting for the bootstrap complete step. Keep this process running in a separate session.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;  INFO Waiting up to 20m0s for the Kubernetes API at https://api.ocp4.jftest.com:6443...
   INFO API v1.17.1+f63db30 up
   INFO Waiting up to 40m0s for bootstrapping to complete...
@@ -894,7 +1274,7 @@ journalctl -b -f -u bootkube.service
 ssh -i ~/.ssh/vsphere-ocp4 core@10.80.158.8
 ssh -i ~/.ssh/vsphere-ocp4 core@10.80.158.9
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;You can also check the load balancer: http://139.178.72.19:9000/&lt;/p&gt;
-&lt;p&gt;Once the bootstap process is complete (like with the example below) you can export your KUBECONFIG directory and you can view your nodes.&lt;/p&gt;
+&lt;p&gt;Once the bootstrap process is complete (like with the example below) you can export your KUBECONFIG directory and you can view your nodes.&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;  INFO Waiting up to 20m0s for the Kubernetes API at https://api.ocp4.jftest.com:6443...
   INFO API v1.17.1+f63db30 up
   INFO Waiting up to 40m0s for bootstrapping to complete...
@@ -931,13 +1311,13 @@ worker1.ocp4.jftest.com   Ready    worker   26m   v1.17.1
   INFO To access the cluster as the system:admin user when using &amp;#39;oc&amp;#39;, run &amp;#39;export KUBECONFIG=/home/jforce/ocp4/auth/kubeconfig&amp;#39;
   INFO Access the OpenShift web-console here: https://console-openshift-console.apps.ocp4.jftest.com
   INFO Login to the console with user: kubeadmin, password: jxgag-qtQ27-bCCsW-TauyP
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;You should now be able to logon to the web console. I&amp;rsquo;m doing so from my baston host in the ESXi console.&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;You should now be able to login to the web console. I&amp;rsquo;m doing so from my bastion host in the ESXi console.&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://sysadm.life/images/ocp_vmware_finished.png#center&#34; alt=&#34;Finished, here&amp;rsquo;s the console&#34;&gt;&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://sysadm.life/images/ocp_vmware_finished3.png#center&#34; alt=&#34;Finished, here&amp;rsquo;s the console&#34;&gt;&lt;/p&gt;
 &lt;p&gt;Congrats, if you made it this far you&amp;rsquo;ve completed the installation! &amp;hellip;or just read my article&amp;hellip; equally a good accomplishment!&lt;/p&gt;
 &lt;h1 id=&#34;summary-thoughts-and-troubleshooting&#34;&gt;Summary, Thoughts and Troubleshooting&lt;/h1&gt;
 &lt;p&gt;The installation process isn&amp;rsquo;t as bad as I thought. It&amp;rsquo;s relatively straight forward once you have the re-reqs such as correct DNS records, a properly configured load balancer and a web server with proper permissions serving the correct content it&amp;rsquo;s fairly straight forward after that.&lt;/p&gt;
-&lt;p&gt;One thing that I did find odd was that I had to create a VM using the ova as I could&amp;rsquo;nt get it to work myself when creating a VM. Whenever I tried with a non ova created VM it would hang in the dracut process. Should&amp;rsquo;nt booting from the iso and it pulling the neccessary file be enough. I&amp;rsquo;m not quite sure why the ova created VM worked and a non ova created VM didn&amp;rsquo;t&amp;hellip; I need to investigate into this some more (there is probably some reason I&amp;rsquo;ve missed).&lt;/p&gt;
+&lt;p&gt;One thing that I did find odd was that I had to create a VM using the ova as I couldn&amp;rsquo;t get it to work myself when creating a VM. Whenever I tried with a non ova created VM it would hang in the dracut process. Shouldn’t booting from the iso and it pulling the necessary file be enough. I&amp;rsquo;m not quite sure why the ova created VM worked and a non ova created VM didn&amp;rsquo;t&amp;hellip; I need to investigate this some more (there is probably some reason I&amp;rsquo;ve missed).&lt;/p&gt;
 &lt;p&gt;As I mentioned I think I will write another article soon about putting some automation around this process.&lt;/p&gt;
 &lt;h1 id=&#34;references&#34;&gt;References&lt;/h1&gt;
 &lt;p&gt;The below documentation and articles helped me put all this together.&lt;/p&gt;
