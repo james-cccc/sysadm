@@ -5,9 +5,160 @@
     <description>Recent content on sysadm.life</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 22 Jun 2020 18:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 12 Feb 2021 18:00:00 +0000</lastBuildDate>
     
         <atom:link href="https://sysadm.life/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    
+        <item>
+        <title>Installing the Nvidia GPU Operator on Openshift 4</title>
+        <link>https://sysadm.life/posts/openshift_nvidia_gpu_operator/</link>
+        <pubDate>Fri, 12 Feb 2021 18:00:00 +0000</pubDate>
+        
+        <guid>https://sysadm.life/posts/openshift_nvidia_gpu_operator/</guid>
+        <description>sysadm.life https://sysadm.life/posts/openshift_nvidia_gpu_operator/ -&lt;p&gt;A disconnected installation of the gpu-operator on Openshift is not officially documented. If you attempt to install the Operator disconnected the pods fail to run as they are unable to pull the required rpms to build the driver for the specific kernel version of the CoreOS node on which they are running on. The operator can therefore be made to work by hosting the required rpm packages in a local mirror.&lt;/p&gt;
+&lt;p&gt;This article will not concentrate too much on getting the operator and its images available to the cluster, but more on solving the issue of the installation when the operator and images are available.&lt;/p&gt;
+&lt;p&gt;Nvidia does have some documentation on a disconnected &amp;lsquo;air gapped&amp;rsquo; installation for this operator. This can be found here: &lt;a href=&#34;https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/getting-started.html&#34;&gt;Considerations to Install in Air-Gapped Clusters&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;container-images&#34;&gt;Container Images&lt;/h2&gt;
+&lt;p&gt;The below steps expect that the existence of a local mirror registry and a custom operator catalog image and that these already setup and working correctly. The documentation for this can be found here: &lt;a href=&#34;https://docs.openshift.com/container-platform/4.6/operators/admin/olm-restricted-networks.html&#34;&gt;Using Operator Lifecycle Manager on restricted networks&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Mirror the required images in your local image registry. You should also be able to see the images listed here: &lt;a href=&#34;https://github.com/NVIDIA/gpu-operator/blob/master/bundle/manifests/gpu-operator.clusterserviceversion.yaml#L128&#34;&gt;gpu-operator.clusterserviceversion.yaml&lt;/a&gt;. At the time of writing the latest version was 1.5.2 and this looks like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;relatedImages&lt;/span&gt;:
+  - &lt;span style=&#34;color:#66d9ef&#34;&gt;name&lt;/span&gt;: gpu-operator-image
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;image&lt;/span&gt;: nvcr.io/nvidia/gpu-operator@sha256:679fea62eb2c207d26354ac088fbe4625457a329dee080d90479a411603eb694
+  - &lt;span style=&#34;color:#66d9ef&#34;&gt;name&lt;/span&gt;: dcgm-exporter-image
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;image&lt;/span&gt;: nvcr.io/nvidia/k8s/dcgm-exporter@sha256:85016e39f73749ef9769a083ceb849cae80c31c5a7f22485b3ba4aa590ec7b88
+  - &lt;span style=&#34;color:#66d9ef&#34;&gt;name&lt;/span&gt;: container-toolkit-image
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;image&lt;/span&gt;: nvcr.io/nvidia/k8s/container-toolkit@sha256:81295a9eca36cbe5d94b80732210b8dc7276c6ef08d5a60d12e50479b9e542cd
+  - &lt;span style=&#34;color:#66d9ef&#34;&gt;name&lt;/span&gt;: driver-image
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;image&lt;/span&gt;: nvcr.io/nvidia/driver@sha256:324e9dc265dec320207206aa94226b0c8735fd93ce19b36a415478c95826d934
+  - &lt;span style=&#34;color:#66d9ef&#34;&gt;name&lt;/span&gt;: device-plugin-image
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;image&lt;/span&gt;: nvcr.io/nvidia/k8s-device-plugin@sha256:f7bf5955a689fee4c1c74dc7928220862627adc97e00a4b585f9c31965e79625
+  - &lt;span style=&#34;color:#66d9ef&#34;&gt;name&lt;/span&gt;: gpu-feature-discovery-image
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;image&lt;/span&gt;: nvcr.io/nvidia/gpu-feature-discovery@sha256:8d068b7b2e3c0b00061bbff07f4207bd49be7d5bfbff51fdf247bc91e3f27a14
+  - &lt;span style=&#34;color:#66d9ef&#34;&gt;name&lt;/span&gt;: cuda-sample-image
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;image&lt;/span&gt;: nvcr.io/nvidia/k8s/cuda-sample@sha256:2a30fe7e23067bc2c3f8f62a6867702a016af2b80b9f6ce861f3fea4dfd85bc2
+  - &lt;span style=&#34;color:#66d9ef&#34;&gt;name&lt;/span&gt;: dcgm-init-container-image
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;image&lt;/span&gt;: nvcr.io/nvidia/cuda@sha256:ed723a1339cddd75eb9f2be2f3476edf497a1b189c10c9bf9eb8da4a16a51a59
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;WARNING&lt;/strong&gt;: If getting the images from the above CSV yaml be sure to use the correct version for the operator you are planning on using.&lt;/p&gt;
+&lt;p&gt;Then follow &lt;a href=&#34;https://docs.openshift.com/container-platform/4.6/openshift_images/image-configuration.html&#34;&gt;image configuration&lt;/a&gt; to configure the registrySources of OpenShift to pull those images from the mirror registry.&lt;/p&gt;
+&lt;p&gt;The disconnected documentation from Nvidia notes Ubuntu based images therefore make sure to use the correct images for your use case e.g. for Openshift use the RHEL based images. &lt;a href=&#34;https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/getting-started.html&#34;&gt;nvidia documentation&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;packages&#34;&gt;Packages&lt;/h2&gt;
+&lt;p&gt;The following packages need to exist in a local mirror.  Documentation for setting up a custom local mirror for these packages can be found here: &lt;a href=&#34;https://wiki.centos.org/HowTos/CreateLocalMirror&#34;&gt;Creating Local Mirrors for Updates or Installs&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The matching of rpm to the kernel version of the RHCOS nodes is quite important. Therefore, to ensure this make sure to find the $HOST_ARCH and $GPU_NODE_KERNEL_VERSION by running &lt;code&gt;oc describe node&lt;/code&gt; for a bare metal node that has a GPU.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;elfutils-libelf.&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;HOST_ARCH&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;
+elfutils-libelf-devel.&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;HOST_ARCH&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;
+kernel-headers-&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;GPU_NODE_KERNEL_VERSION&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;
+kernel-devel-&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;GPU_NODE_KERNEL_VERSION&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;
+kernel-core-&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;GPU_NODE_KERNEL_VERSION&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;These above packages are needed to run the driver container, as can be seen &lt;a href=&#34;https://gitlab.com/nvidia/container-images/driver/-/blob/master/rhel8/nvidia-driver&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;h1 id=&#34;installation&#34;&gt;Installation&lt;/h1&gt;
+&lt;p&gt;With the mirrors for both the container images and rpm packages in place, the installation can commence.&lt;/p&gt;
+&lt;p&gt;Firstly, install the NodeFeatureDiscovery and NVIDIA GPU Operators from the operator hub. Documentation for this can be found here: &lt;a href=&#34;https://docs.nvidia.com/datacenter/kubernetes/openshift-on-gpu-install-guide/index.html#openshift-gpu-support-install-via-operatorhub&#34;&gt;Installing via OpenShift OperatorHub&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;However, do not create the cluster policy for the NVIDIA GPU Operator yet.&lt;/p&gt;
+&lt;p&gt;The next step is to add the repository configuration for the driver container. Create a ConfigMap named &amp;lsquo;repo-config&amp;rsquo; in the &amp;lsquo;gpu-operator-resources&amp;rsquo; namespace containing the repository configuration file.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;oc create configmap repo-config -n gpu-operator-resources
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;apiVersion&lt;/span&gt;: v1
+&lt;span style=&#34;color:#66d9ef&#34;&gt;kind&lt;/span&gt;: ConfigMap
+&lt;span style=&#34;color:#66d9ef&#34;&gt;metadata&lt;/span&gt;:
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;name&lt;/span&gt;: repo-config
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;namespace&lt;/span&gt;: gpu-operator-resources
+&lt;span style=&#34;color:#66d9ef&#34;&gt;data&lt;/span&gt;:
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;local8.repo&lt;/span&gt;: |&lt;span style=&#34;color:#e6db74&#34;&gt;-
+&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;    [nvidia-operator]&lt;/span&gt;
+    name=nvidia-operator
+    baseurl=http://host/repo/nvidia-operator/
+    enabled=&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+    gpgcheck=&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
+    gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Now create the cluster policy for the NVIDIA GPU Operator (following the earlier documentation &lt;a href=&#34;https://docs.nvidia.com/datacenter/kubernetes/openshift-on-gpu-install-guide/index.html#openshift-gpu-support-install-via-operatorhub&#34;&gt;here&lt;/a&gt;) with the default names but be sure to update the driver section to map to the repo-config config map. This section is documented below.&lt;/p&gt;
+&lt;p&gt;The driver version comes from the version of RHCOS you are using. At the time of writing the driver version, 450.80.02 was the latest and mapped against RHCOS 4.6. &lt;a href=&#34;https://hub.docker.com/layers/nvidia/driver/450.80.02-rhcos4.6/images/sha256-324e9dc265dec320207206aa94226b0c8735fd93ce19b36a415478c95826d934?context=explore&#34;&gt;nvidia/driver:450.80.02-rhcos4.6&lt;/a&gt;. Further driver images can be found here &lt;a href=&#34;https://gitlab.com/nvidia/container-images/driver&#34;&gt;Nvidia driver images&lt;/a&gt;.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;driver&lt;/span&gt;:
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;repository&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;repo.local:9443/nvidia&amp;#39;&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;image&lt;/span&gt;: driver
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;version&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;450.80.02&lt;/span&gt;
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;repoConfig&lt;/span&gt;:
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;configMapName&lt;/span&gt;: repo-config
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;destinationDir&lt;/span&gt;: /etc/yum.repos.d
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The final cluster policy might look something like the below:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;apiVersion&lt;/span&gt;: nvidia.com/v1
+&lt;span style=&#34;color:#66d9ef&#34;&gt;kind&lt;/span&gt;: ClusterPolicy
+&lt;span style=&#34;color:#66d9ef&#34;&gt;metadata&lt;/span&gt;:
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;name&lt;/span&gt;: gpu-cluster-policy
+&lt;span style=&#34;color:#66d9ef&#34;&gt;spec&lt;/span&gt;:
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;dcgmExporter&lt;/span&gt;:
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;nodeSelector&lt;/span&gt;: {}
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;imagePullSecrets&lt;/span&gt;: []
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;resources&lt;/span&gt;: {}
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;affinity&lt;/span&gt;: {}
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;podSecurityContext&lt;/span&gt;: {}
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;repository&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;repo.local:9443/nvidia/k8s&amp;#39;&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;securityContext&lt;/span&gt;: {}
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;version&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;2.0.13-2.1.0&lt;/span&gt;-ubi8
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;image&lt;/span&gt;: dcgm-exporter
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;tolerations&lt;/span&gt;: []
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;devicePlugin&lt;/span&gt;:
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;nodeSelector&lt;/span&gt;: {}
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;imagePullSecrets&lt;/span&gt;: []
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;resources&lt;/span&gt;: {}
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;affinity&lt;/span&gt;: {}
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;podSecurityContext&lt;/span&gt;: {}
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;repository&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;repo.local:9443/nvidia&amp;#39;&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;securityContext&lt;/span&gt;: {}
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;version&lt;/span&gt;: v0&lt;span style=&#34;color:#ae81ff&#34;&gt;.7.0&lt;/span&gt;-ubi8
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;image&lt;/span&gt;: k8s-device-plugin
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;tolerations&lt;/span&gt;: []
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;driver&lt;/span&gt;:
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;nodeSelector&lt;/span&gt;: {}
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;imagePullSecrets&lt;/span&gt;: []
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;resources&lt;/span&gt;: {}
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;affinity&lt;/span&gt;: {}
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;podSecurityContext&lt;/span&gt;: {}
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;repository&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;repo.local:9443/nvidia&amp;#39;&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;securityContext&lt;/span&gt;: {}
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;repoConfig&lt;/span&gt;:
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;configMapName&lt;/span&gt;: repo-config
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;destinationDir&lt;/span&gt;: /etc/yum.repos.d
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;version&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;450.80.02&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;image&lt;/span&gt;: driver
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;tolerations&lt;/span&gt;: []
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;gfd&lt;/span&gt;:
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;nodeSelector&lt;/span&gt;: {}
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;imagePullSecrets&lt;/span&gt;: []
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;resources&lt;/span&gt;: {}
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;affinity&lt;/span&gt;: {}
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;podSecurityContext&lt;/span&gt;: {}
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;repository&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;repo.local:9443/nvidia&amp;#39;&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;securityContext&lt;/span&gt;: {}
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;version&lt;/span&gt;: v0&lt;span style=&#34;color:#ae81ff&#34;&gt;.2.1&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;image&lt;/span&gt;: gpu-feature-discovery
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;sleepInterval&lt;/span&gt;: 60s
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;tolerations&lt;/span&gt;: []
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;migStrategy&lt;/span&gt;: none
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;operator&lt;/span&gt;:
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;defaultRuntime&lt;/span&gt;: crio
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;deployGFD&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;validator&lt;/span&gt;:
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;image&lt;/span&gt;: cuda-sample
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;imagePullSecrets&lt;/span&gt;: []
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;repository&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;repo.local:9443/nvidia/k8s&amp;#39;&lt;/span&gt;
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;version&lt;/span&gt;: vectoradd-cuda10&lt;span style=&#34;color:#ae81ff&#34;&gt;.2&lt;/span&gt;-ubi8
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;toolkit&lt;/span&gt;:
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;nodeSelector&lt;/span&gt;: {}
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;imagePullSecrets&lt;/span&gt;: []
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;resources&lt;/span&gt;: {}
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;affinity&lt;/span&gt;: {}
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;podSecurityContext&lt;/span&gt;: {}
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;repository&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;repo.local:9443/nvidia/k8s&amp;#39;&lt;/span&gt;
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;securityContext&lt;/span&gt;: {}
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;version&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;1.3.0&lt;/span&gt;-ubi8
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;image&lt;/span&gt;: container-toolkit
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;tolerations&lt;/span&gt;: []
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Once the cluster policy for the NVIDIA GPU Operator has been successfully created verify that the pods are building the driver and are starting up okay. At this point, the operator should now be working in a disconnected environment.&lt;/p&gt;
+&lt;h2 id=&#34;upgrades&#34;&gt;Upgrades&lt;/h2&gt;
+&lt;p&gt;The only thing to note is to be careful when performing cluster upgrades. If the kernel of the CoreOS node changes when performing an upgrade make sure to have the required kernel-headers, kernel-devel and kernel-core packages for the new kernel version available.&lt;/p&gt;
+- https://sysadm.life/posts/openshift_nvidia_gpu_operator/ - </description>
+        </item>
     
     
     

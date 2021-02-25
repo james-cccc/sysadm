@@ -6,10 +6,19 @@
     <description>Recent content in Openshift on sysadm.life</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 22 Jun 2020 18:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 12 Feb 2021 18:00:00 +0000</lastBuildDate>
     
 	<atom:link href="https://sysadm.life/tags/openshift/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Installing the Nvidia GPU Operator on Openshift 4</title>
+      <link>https://sysadm.life/posts/openshift_nvidia_gpu_operator/</link>
+      <pubDate>Fri, 12 Feb 2021 18:00:00 +0000</pubDate>
+      
+      <guid>https://sysadm.life/posts/openshift_nvidia_gpu_operator/</guid>
+      <description>A disconnected installation of the gpu-operator on Openshift is not officially documented. If you attempt to install the Operator disconnected the pods fail to run as they are unable to pull the required rpms to build the driver for the specific kernel version of the CoreOS node on which they are running on. The operator can therefore be made to work by hosting the required rpm packages in a local mirror.</description>
+    </item>
     
     <item>
       <title>Modifying Openshifts CoreOS ignition files</title>
