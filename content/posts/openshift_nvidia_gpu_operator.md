@@ -122,7 +122,7 @@ spec:
     resources: {}
     affinity: {}
     podSecurityContext: {}
-    repository: 'repo.local:9443/nvidia/k8s'
+    repository: 'repo.local:9443/nvidia'
     securityContext: {}
     version: 2.0.13-2.1.0-ubi8
     image: dcgm-exporter
@@ -171,7 +171,7 @@ spec:
     validator:
       image: cuda-sample
       imagePullSecrets: []
-      repository: 'repo.local:9443/nvidia/k8s'
+      repository: 'repo.local:9443/nvidia'
       version: vectoradd-cuda10.2-ubi8
   toolkit:
     nodeSelector: {}
@@ -179,7 +179,7 @@ spec:
     resources: {}
     affinity: {}
     podSecurityContext: {}
-    repository: 'repo.local:9443/nvidia/k8s'
+    repository: 'repo.local:9443/nvidia'
     securityContext: {}
     version: 1.3.0-ubi8
     image: container-toolkit
